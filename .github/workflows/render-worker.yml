@@ -29,6 +29,9 @@ jobs:
   render:
     runs-on: ubuntu-latest
     timeout-minutes: 55
+    permissions:
+      id-token: write # OIDC identity token — authenticates the worker to the app, no repo secret needed
+      contents: read
     steps:
       - uses: actions/checkout@v4
 
