@@ -1,0 +1,13 @@
+{
+  "name": "thraansh-render-worker",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "External FFmpeg render worker for the THRAANSH video pipeline",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "once": "RUN_ONCE=1 node index.js"
+  },
+  "engines": { "node": ">=20" }
+}
