@@ -19,7 +19,7 @@ import { renderSpec } from "./render.js";
  */
 
 let BASE = (process.env.THRAANSH_BASE_URL || "").replace(/\/$/, "");
-const SECRET = process.env.RENDER_WORKER_SECRET || "";
+const STATIC_SECRET = process.env.RENDER_WORKER_SECRET || "";
 const WORKER_ID = process.env.WORKER_ID || `worker-${Math.random().toString(36).slice(2, 8)}`;
 const POLL_MS = Number(process.env.POLL_INTERVAL_MS || 15000);
 const RUN_ONCE = process.env.RUN_ONCE === "1";
@@ -27,11 +27,42 @@ const RUN_ONCE = process.env.RUN_ONCE === "1";
 const IDLE_EXITS = Number(process.env.IDLE_EXITS || 0);
 /** Hard stop so a scheduled runner can never hang (minutes, 0 = unlimited). */
 const MAX_RUNTIME_MIN = Number(process.env.MAX_RUNTIME_MIN || 0);
-const VERSION = "1.0.0";
+const VERSION = "1.1.0";
 
-if (!BASE || !SECRET) {
-  console.error("THRAANSH_BASE_URL and RENDER_WORKER_SECRET are required. See worker/README.md.");
+/**
+ * Auth: a static RENDER_WORKER_SECRET when present (self-hosted runners), or
+ * the GitHub Actions OIDC identity token (no repository secret needed — the
+ * app verifies the token against GitHub's JWKS and pins it to our repo).
+ */
+const OIDC_REQUEST_URL = process.env.ACTIONS_ID_TOKEN_REQUEST_URL || "";
+const OIDC_REQUEST_TOKEN = process.env.ACTIONS_ID_TOKEN_REQUEST_TOKEN || "";
+const OIDC_AUDIENCE = "thraansh-render-worker";
+let oidcCache = { token: "", expiresAt: 0 };
+
+async function getAuthToken() {
+  if (STATIC_SECRET) return STATIC_SECRET;
+  if (!OIDC_REQUEST_URL || !OIDC_REQUEST_TOKEN) return "";
+  const now = Date.now();
+  if (oidcCache.token && oidcCache.expiresAt > now + 60_000) return oidcCache.token;
+  const res = await fetch(`${OIDC_REQUEST_URL}&audience=${OIDC_AUDIENCE}`, {
+    headers: { authorization: `Bearer ${OIDC_REQUEST_TOKEN}` },
+  });
+  if (!res.ok) throw new Error(`OIDC token request failed (${res.status})`);
+  const json = await res.json();
+  // OIDC tokens live ~10 minutes; refresh conservatively after 4.
+  oidcCache = { token: json.value, expiresAt: now + 4 * 60_000 };
+  return oidcCache.token;
+}
+
+if (!BASE) {
+  console.error("THRAANSH_BASE_URL is required. See worker/README.md.");
   process.exit(1);
+}
+if (!STATIC_SECRET && !OIDC_REQUEST_URL) {
+  // Scheduled runs without credentials have nothing to do — exit quietly
+  // instead of failing the workflow red.
+  console.log("no RENDER_WORKER_SECRET and no OIDC environment — nothing to do, exiting");
+  process.exit(0);
 }
 
 const log = (...a) => console.log(new Date().toISOString(), `[${WORKER_ID}]`, ...a);
@@ -55,10 +86,11 @@ async function resolveBase() {
 }
 
 async function api(pathname, body) {
+  const token = await getAuthToken();
   const res = await fetch(`${BASE}${pathname}`, {
     method: "POST",
     redirect: "manual",
-    headers: { authorization: `Bearer ${SECRET}`, "content-type": "application/json" },
+    headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
     body: JSON.stringify(body ?? {}),
   });
   if (res.status >= 300 && res.status < 400 && res.headers.get("location")) {
@@ -66,7 +98,7 @@ async function api(pathname, body) {
     BASE = target.origin;
     const retry = await fetch(target, {
       method: "POST",
-      headers: { authorization: `Bearer ${SECRET}`, "content-type": "application/json" },
+      headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
       body: JSON.stringify(body ?? {}),
     });
     const t = await retry.text();
