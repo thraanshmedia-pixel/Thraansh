@@ -1,0 +1,51 @@
+name: THRAANSH render worker
+
+# Free, always-available FFmpeg renderer using GitHub-hosted runners.
+# No Fly.io, no paid hosting. The existing worker/ code is reused as-is:
+# it leases jobs, renders with FFmpeg, uploads via signed URLs and reports
+# heartbeat/progress/completion to THRAANSH.
+#
+# Runs shortly before every THRAANSH DAILY slot (07/09/11/13/15/17/19/21 IST)
+# and the AI World Stories slots (08:00 / 19:30 IST), plus hourly catch-ups.
+# Each run drains the queue and exits as soon as it is empty, so minutes are
+# only spent when there is real work.
+
+on:
+  schedule:
+    # IST = UTC+5:30. Times below are UTC.
+    - cron: "0 * * * *"    # hourly catch-up
+    - cron: "30 * * * *"   # half-hourly catch-up (covers all slot prep windows)
+  workflow_dispatch:
+    inputs:
+      minutes:
+        description: "Max runtime in minutes"
+        default: "50"
+
+concurrency:
+  group: thraansh-render-worker
+  cancel-in-progress: false
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install FFmpeg
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends ffmpeg fonts-dejavu-core
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Run render worker (drain queue, then exit)
+        working-directory: worker
+        env:
+          THRAANSH_BASE_URL: ${{ vars.THRAANSH_BASE_URL || 'https://thraansh.com' }}
+          RENDER_WORKER_SECRET: ${{ secrets.RENDER_WORKER_SECRET }}
+          WORKER_ID: github-actions-render
+          POLL_INTERVAL_MS: "10000"
+          IDLE_EXITS: "3"
+          MAX_RUNTIME_MIN: ${{ github.event.inputs.minutes || '50' }}
+        run: node index.js
