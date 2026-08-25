@@ -117,7 +117,12 @@ function wrapCaption(text, maxChars = 26) {
   return out.join("\\N");
 }
 
-/** Burned-in captions + persistent branding, built as one ASS subtitle file. */
+/**
+ * Burned-in captions + persistent branding, built as one ASS subtitle file.
+ * Font is Noto Sans: the runner installs fonts-noto-core, which includes
+ * Noto Sans Devanagari, so Hindi (Devanagari) captions render correctly via
+ * fontconfig fallback instead of showing boxes.
+ */
 function buildAss(spec, totalDuration) {
   const { width, height } = spec.resolution;
   const fontSize = Math.round(height * 0.042);
@@ -131,9 +136,9 @@ function buildAss(spec, totalDuration) {
     "",
     "[V4+ Styles]",
     "Format: Name, Fontname, Fontsize, PrimaryColour, OutlineColour, BackColour, Bold, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding",
-    `Style: Caption,DejaVu Sans,${fontSize},&H00FFFFFF,&H00101010,&H80000000,1,3,${Math.round(fontSize * 0.12)},2,2,${Math.round(width * 0.08)},${Math.round(width * 0.08)},${Math.round(height * 0.16)},1`,
-    `Style: Brand,DejaVu Sans,${brandSize},&H00FFFFFF,&H00101010,&H80000000,1,3,2,1,9,${Math.round(width * 0.04)},${Math.round(width * 0.04)},${Math.round(height * 0.03)},1`,
-    `Style: Lower,DejaVu Sans,${brandSize},&H00FFFFFF,&H00101010,&H80000000,0,3,2,1,1,${Math.round(width * 0.05)},${Math.round(width * 0.05)},${Math.round(height * 0.08)},1`,
+    `Style: Caption,Noto Sans,${fontSize},&H00FFFFFF,&H00101010,&H80000000,1,3,${Math.round(fontSize * 0.12)},2,2,${Math.round(width * 0.08)},${Math.round(width * 0.08)},${Math.round(height * 0.16)},1`,
+    `Style: Brand,Noto Sans,${brandSize},&H00FFFFFF,&H00101010,&H80000000,1,3,2,1,9,${Math.round(width * 0.04)},${Math.round(width * 0.04)},${Math.round(height * 0.03)},1`,
+    `Style: Lower,Noto Sans,${brandSize},&H00FFFFFF,&H00101010,&H80000000,0,3,2,1,1,${Math.round(width * 0.05)},${Math.round(width * 0.05)},${Math.round(height * 0.08)},1`,
     "",
     "[Events]",
     "Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text",
