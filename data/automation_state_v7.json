@@ -1,14 +1,14 @@
 {
-  "prepared_slot": "2026-09-01T19:16",
+  "prepared_slot": "2026-09-01T21:22",
   "prepare_status": "READY",
-  "prepared_title": "Punjab PSEB Class 10 Supplementary 2026 Result Declared At pseb.ac.in; Direct Link Here",
-  "prepared_video": "/home/runner/work/Thraansh/Thraansh/final_videos/Punjab_PSEB_Class_10_Supplementary_2026_Result_Declared_At_pseb.ac.in;_Direct_Link_Here_THRAANSH_FINAL.mp4",
-  "prepared_at_ist": "2026-09-01T19:19:21.552215+05:30",
-  "updated_at_ist": "2026-09-01T19:20:33.607432+05:30",
+  "prepared_title": "Aurobindo Pharma US FDA Inspection Ends With 3 Observations At Apitoria Pharma Plant",
+  "prepared_video": "/home/runner/work/Thraansh/Thraansh/final_videos/Aurobindo_Pharma_US_FDA_Inspection_Ends_With_3_Observations_At_Apitoria_Pharma_Plant_THRAANSH_FINAL.mp4",
+  "prepared_at_ist": "2026-09-01T21:24:41.810111+05:30",
+  "updated_at_ist": "2026-09-01T21:26:25.604458+05:30",
   "completion_status": "COMPLETE",
   "active_slot": "",
-  "completed_slot": "2026-09-01T19:16",
-  "completed_at_ist": "2026-09-01T19:20:33.607418+05:30",
+  "completed_slot": "2026-09-01T21:22",
+  "completed_at_ist": "2026-09-01T21:26:25.604446+05:30",
   "failed_stage": "FINAL VIDEO",
   "gemini_retry_not_before": "2026-08-30T12:35:00+05:30"
 }
