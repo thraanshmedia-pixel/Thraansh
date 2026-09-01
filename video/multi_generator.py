@@ -1,7 +1,10 @@
+from __future__ import annotations
+
 import json
 import re
 import shutil
 import subprocess
+import sys
 from datetime import datetime
 from pathlib import Path
 
@@ -10,24 +13,25 @@ from PIL import Image
 
 
 # ============================================================
-# THRAANSH ULTRA-FAST STORY VIDEO RENDERER
+# THRAANSH ULTRA-FAST MULTI-SCENE NEWS VIDEO RENDERER
 #
-# MAIN FIX:
-# Images are resized ONCE with Pillow.
-# FFmpeg does not repeatedly resize huge images frame-by-frame.
-#
-# VIDEO:
+# OUTPUT
+# ------
 # 1280x720
 # 24 FPS
+# H.264 + AAC
 #
-# AUDIO:
-# Easy Hindi narration
-# Background instrumental music
-#
-# MEDIA:
-# Story-specific files only
-# No presenter fallback
-# No duplicate files
+# FEATURES
+# --------
+# - Story-specific footage only
+# - Multiple video/image scenes
+# - Hindi narration
+# - Background music
+# - Burned-in Hindi subtitles
+# - Windows + GitHub Ubuntu compatible
+# - Noto Sans Devanagari subtitle support
+# - Queue/state updates
+# - No presenter fallback
 # ============================================================
 
 
@@ -35,7 +39,11 @@ from PIL import Image
 # PROJECT PATHS
 # ============================================================
 
-PROJECT_FOLDER = Path(__file__).resolve().parents[1]
+PROJECT_FOLDER = (
+    Path(__file__)
+    .resolve()
+    .parents[1]
+)
 
 QUEUE_FILE = (
     PROJECT_FOLDER
@@ -58,6 +66,11 @@ PREPARED_IMAGE_FOLDER = (
     / "prepared_images"
 )
 
+PREPARED_VIDEO_FOLDER = (
+    TEMP_FOLDER
+    / "prepared_videos"
+)
+
 FINAL_FOLDER = (
     PROJECT_FOLDER
     / "final_videos"
@@ -70,28 +83,48 @@ MUSIC_FILE = (
 )
 
 
-TEMP_FOLDER.mkdir(
-    parents=True,
-    exist_ok=True
-)
-
-PREPARED_IMAGE_FOLDER.mkdir(
-    parents=True,
-    exist_ok=True
-)
-
-FINAL_FOLDER.mkdir(
-    parents=True,
-    exist_ok=True
-)
+for folder in (
+    SCENE_FOLDER,
+    TEMP_FOLDER,
+    PREPARED_IMAGE_FOLDER,
+    PREPARED_VIDEO_FOLDER,
+    FINAL_FOLDER,
+):
+    folder.mkdir(
+        parents=True,
+        exist_ok=True
+    )
 
 
 # ============================================================
 # FFMPEG
 # ============================================================
 
-FFMPEG_EXE = Path(
-    imageio_ffmpeg.get_ffmpeg_exe()
+# GitHub Ubuntu:
+# use system FFmpeg because it contains libass/subtitles support.
+#
+# Windows:
+# if system FFmpeg is unavailable, use imageio-ffmpeg fallback.
+
+SYSTEM_FFMPEG = shutil.which(
+    "ffmpeg"
+)
+
+if SYSTEM_FFMPEG:
+
+    FFMPEG_EXE = Path(
+        SYSTEM_FFMPEG
+    )
+
+else:
+
+    FFMPEG_EXE = Path(
+        imageio_ffmpeg.get_ffmpeg_exe()
+    )
+
+
+SYSTEM_FFPROBE = shutil.which(
+    "ffprobe"
 )
 
 
@@ -111,6 +144,8 @@ VIDEO_PRESET = "ultrafast"
 
 VIDEO_CRF = "25"
 
+PIXEL_FORMAT = "yuv420p"
+
 
 # ============================================================
 # AUDIO SETTINGS
@@ -128,26 +163,27 @@ MUSIC_VOLUME = 0.08
 
 
 # ============================================================
-# RULES
+# SCENE SETTINGS
 # ============================================================
 
 MIN_SCENES = 3
 
+DEFAULT_SCENE_SECONDS = 6.0
 
-# ============================================================
-# FILE TYPES
-# ============================================================
+MIN_SCENE_SECONDS = 3.0
+
 
 VIDEO_EXTENSIONS = {
     ".mp4",
-    ".webm",
     ".mov",
     ".mkv",
     ".avi",
+    ".webm",
     ".mpeg",
     ".mpg",
     ".ogv",
 }
+
 
 IMAGE_EXTENSIONS = {
     ".jpg",
@@ -155,33 +191,60 @@ IMAGE_EXTENSIONS = {
     ".png",
     ".webp",
     ".bmp",
-    ".tif",
-    ".tiff",
-}
-
-AUDIO_EXTENSIONS = {
-    ".wav",
-    ".mp3",
-    ".m4a",
-    ".aac",
-    ".ogg",
-    ".flac",
-    ".opus",
 }
 
 
 # ============================================================
-# HELPERS
+# DISPLAY
+# ============================================================
+
+def line():
+
+    print(
+        "=" * 72
+    )
+
+
+def header(text):
+
+    print()
+
+    line()
+
+    print(
+        text
+    )
+
+    line()
+
+    print()
+
+
+# ============================================================
+# TEXT HELPERS
 # ============================================================
 
 def clean_text(value):
 
     if value is None:
+
         return ""
 
-    return " ".join(
-        str(value).split()
-    ).strip()
+    return (
+        " ".join(
+            str(value)
+            .replace(
+                "\r",
+                " "
+            )
+            .replace(
+                "\n",
+                " "
+            )
+            .split()
+        )
+        .strip()
+    )
 
 
 def safe_filename(value):
@@ -207,9 +270,12 @@ def safe_filename(value):
     )
 
     if not value:
-        value = "THRAANSH_NEWS"
 
-    return value[:100]
+        value = (
+            "THRAANSH_NEWS"
+        )
+
+    return value[:90]
 
 
 # ============================================================
@@ -221,11 +287,11 @@ def load_queue():
     if not QUEUE_FILE.exists():
 
         raise RuntimeError(
-            "article_queue.json not found."
+            f"Queue file missing: "
+            f"{QUEUE_FILE}"
         )
 
-    with open(
-        QUEUE_FILE,
+    with QUEUE_FILE.open(
         "r",
         encoding="utf-8"
     ) as file:
@@ -234,22 +300,49 @@ def load_queue():
             file
         )
 
-    if not isinstance(
+    if isinstance(
         data,
         list
     ):
 
-        raise RuntimeError(
-            "article_queue.json must contain a list."
-        )
+        return data
 
-    return data
+    if isinstance(
+        data,
+        dict
+    ):
+
+        for key in (
+            "articles",
+            "items",
+            "queue",
+            "news",
+            "data",
+        ):
+
+            if isinstance(
+                data.get(key),
+                list
+            ):
+
+                return data[key]
+
+    raise RuntimeError(
+        "article_queue.json "
+        "does not contain a valid article list."
+    )
 
 
 def save_queue(queue):
 
-    with open(
-        QUEUE_FILE,
+    temp_file = (
+        QUEUE_FILE
+        .with_suffix(
+            ".json.tmp"
+        )
+    )
+
+    with temp_file.open(
         "w",
         encoding="utf-8"
     ) as file:
@@ -261,19 +354,48 @@ def save_queue(queue):
             ensure_ascii=False
         )
 
+    temp_file.replace(
+        QUEUE_FILE
+    )
+
 
 # ============================================================
-# ARTICLE
+# FIND CURRENT ARTICLE
 # ============================================================
 
-def get_next_article(queue):
+def get_article(queue):
 
-    for article in queue:
+    selected = [
+        article
+        for article in queue
+        if (
+            isinstance(
+                article,
+                dict
+            )
+            and article.get(
+                "production_selected"
+            )
+            is True
+        )
+    ]
 
-        if not article.get(
-            "production_selected"
-        ):
-            continue
+    if selected:
+
+        return selected[-1]
+
+    # Compatibility fallback.
+
+    allowed_statuses = {
+        "MULTI_MEDIA_READY",
+        "MEDIA_READY",
+        "SCENE_FOOTAGE_READY",
+        "VIDEO_FAILED",
+    }
+
+    for article in reversed(
+        queue
+    ):
 
         status = clean_text(
             article.get(
@@ -281,29 +403,226 @@ def get_next_article(queue):
             )
         ).upper()
 
-        if status in {
-            "MULTI_MEDIA_READY",
-            "MULTI_VIDEO_FAILED",
-        }:
-
-            return article
-
-    for article in queue:
-
-        status = clean_text(
-            article.get(
-                "status"
-            )
-        ).upper()
-
-        if status in {
-            "MULTI_MEDIA_READY",
-            "MULTI_VIDEO_FAILED",
-        }:
+        if status in allowed_statuses:
 
             return article
 
     return None
+
+
+# ============================================================
+# PATH RESOLUTION
+# ============================================================
+
+def resolve_file(value):
+
+    if not value:
+
+        return None
+
+    raw = str(
+        value
+    ).strip()
+
+    if not raw:
+
+        return None
+
+    path = Path(
+        raw
+    )
+
+    if path.exists():
+
+        return path.resolve()
+
+    # Handle paths produced on another OS.
+
+    basename = Path(
+        raw.replace(
+            "\\",
+            "/"
+        )
+    ).name
+
+    candidates = [
+
+        PROJECT_FOLDER
+        / raw,
+
+        SCENE_FOLDER
+        / basename,
+
+        PROJECT_FOLDER
+        / "voice"
+        / basename,
+
+        PROJECT_FOLDER
+        / "audio"
+        / basename,
+
+        FINAL_FOLDER
+        / basename,
+
+    ]
+
+    for candidate in candidates:
+
+        if candidate.exists():
+
+            return candidate.resolve()
+
+    return None
+
+
+# ============================================================
+# VOICE FILE
+# ============================================================
+
+def find_voice_file(article):
+
+    possible = [
+
+        article.get(
+            "voice_file"
+        ),
+
+        article.get(
+            "audio_file"
+        ),
+
+        article.get(
+            "narration_file"
+        ),
+
+    ]
+
+    for item in possible:
+
+        path = resolve_file(
+            item
+        )
+
+        if (
+            path
+            and path.exists()
+        ):
+
+            return path
+
+    return None
+
+
+# ============================================================
+# SCENES
+# ============================================================
+
+def get_valid_scenes(article):
+
+    raw_scenes = article.get(
+        "scene_plan"
+    )
+
+    if not isinstance(
+        raw_scenes,
+        list
+    ):
+
+        raw_scenes = []
+
+    scenes = []
+
+    for scene in raw_scenes:
+
+        if not isinstance(
+            scene,
+            dict
+        ):
+
+            continue
+
+        footage = (
+            scene.get(
+                "footage_file"
+            )
+            or scene.get(
+                "media_file"
+            )
+            or scene.get(
+                "file"
+            )
+        )
+
+        path = resolve_file(
+            footage
+        )
+
+        if (
+            not path
+            or not path.exists()
+        ):
+
+            continue
+
+        extension = (
+            path.suffix.lower()
+        )
+
+        if extension not in (
+            VIDEO_EXTENSIONS
+            | IMAGE_EXTENSIONS
+        ):
+
+            continue
+
+        scenes.append(
+            {
+                **scene,
+                "_resolved_file":
+                    path,
+            }
+        )
+
+    # Compatibility with footage_files.
+
+    if not scenes:
+
+        files = article.get(
+            "footage_files"
+        )
+
+        if isinstance(
+            files,
+            list
+        ):
+
+            for index, item in enumerate(
+                files,
+                start=1
+            ):
+
+                path = resolve_file(
+                    item
+                )
+
+                if (
+                    not path
+                    or not path.exists()
+                ):
+
+                    continue
+
+                scenes.append(
+                    {
+                        "scene_number":
+                            index,
+
+                        "_resolved_file":
+                            path,
+                    }
+                )
+
+    return scenes
 
 
 # ============================================================
@@ -313,10 +632,20 @@ def get_next_article(queue):
 def run_ffmpeg(arguments):
 
     command = [
-        str(FFMPEG_EXE)
-    ] + arguments
+
+        str(
+            FFMPEG_EXE
+        ),
+
+        *[
+            str(item)
+            for item
+            in arguments
+        ],
+    ]
 
     print()
+
     print(
         "Running FFmpeg..."
     )
@@ -324,7 +653,7 @@ def run_ffmpeg(arguments):
     result = subprocess.run(
         command,
         stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
         text=True,
         encoding="utf-8",
         errors="replace"
@@ -332,75 +661,100 @@ def run_ffmpeg(arguments):
 
     if result.returncode != 0:
 
-        print()
-        print("=" * 72)
-
         print(
-            "FFMPEG FAILED"
-        )
-
-        print("=" * 72)
-
-        print()
-        print(
-            result.stderr
+            result.stdout[-8000:]
         )
 
         raise RuntimeError(
-            "FFmpeg command failed."
+            "FFmpeg failed with "
+            f"exit code "
+            f"{result.returncode}."
         )
 
-    print()
-    print(
-        "FFmpeg completed successfully ✓"
-    )
+    return result
 
 
 # ============================================================
-# MEDIA INSPECTION
+# MEDIA DURATION
 # ============================================================
 
-def inspect_media(path):
+def get_duration(file_path):
+
+    if SYSTEM_FFPROBE:
+
+        command = [
+
+            SYSTEM_FFPROBE,
+
+            "-v",
+            "error",
+
+            "-show_entries",
+            "format=duration",
+
+            "-of",
+            "default="
+            "noprint_wrappers=1:"
+            "nokey=1",
+
+            str(
+                file_path
+            ),
+        ]
+
+        result = subprocess.run(
+            command,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True
+        )
+
+        try:
+
+            duration = float(
+                result.stdout.strip()
+            )
+
+            if duration > 0:
+
+                return duration
+
+        except Exception:
+
+            pass
+
+    # FFmpeg fallback.
 
     result = subprocess.run(
         [
-            str(FFMPEG_EXE),
-            "-hide_banner",
+            str(
+                FFMPEG_EXE
+            ),
             "-i",
-            str(path),
+            str(
+                file_path
+            ),
         ],
         stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
         text=True,
         encoding="utf-8",
         errors="replace"
-    )
-
-    return (
-        result.stdout
-        + "\n"
-        + result.stderr
-    )
-
-
-def get_duration(path):
-
-    information = inspect_media(
-        path
     )
 
     match = re.search(
         r"Duration:\s*"
         r"(\d+):"
         r"(\d+):"
-        r"(\d+(?:\.\d+)?)",
-        information
+        r"([\d.]+)",
+        result.stdout
     )
 
     if not match:
 
         raise RuntimeError(
-            f"Could not determine duration: {path}"
+            "Could not determine duration "
+            f"for {file_path}"
         )
 
     hours = int(
@@ -415,459 +769,173 @@ def get_duration(path):
         match.group(3)
     )
 
-    duration = (
+    return (
         hours * 3600
         + minutes * 60
         + seconds
     )
 
-    if duration <= 0:
 
-        raise RuntimeError(
-            f"Invalid duration: {path}"
-        )
+# ============================================================
+# STREAM VALIDATION
+# ============================================================
 
-    return duration
+def has_video_stream(file_path):
 
-
-def has_video_stream(path):
-
-    information = inspect_media(
-        path
+    result = subprocess.run(
+        [
+            str(
+                FFMPEG_EXE
+            ),
+            "-i",
+            str(
+                file_path
+            ),
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        encoding="utf-8",
+        errors="replace"
     )
 
-    return bool(
-        re.search(
-            r"Stream\s+#.*Video:",
-            information,
-            re.IGNORECASE
-        )
+    return (
+        "Video:"
+        in result.stdout
     )
 
 
-def has_audio_stream(path):
+def has_audio_stream(file_path):
 
-    information = inspect_media(
-        path
+    result = subprocess.run(
+        [
+            str(
+                FFMPEG_EXE
+            ),
+            "-i",
+            str(
+                file_path
+            ),
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        encoding="utf-8",
+        errors="replace"
     )
 
-    return bool(
-        re.search(
-            r"Stream\s+#.*Audio:",
-            information,
-            re.IGNORECASE
-        )
+    return (
+        "Audio:"
+        in result.stdout
     )
 
 
 # ============================================================
-# FIND VOICE
-# ============================================================
-
-def find_voice_file(article):
-
-    fields = [
-        "voice_file",
-        "audio_file",
-        "narration_file",
-        "voice_path",
-        "audio_path",
-    ]
-
-    for field in fields:
-
-        value = clean_text(
-            article.get(
-                field
-            )
-        )
-
-        if not value:
-            continue
-
-        path = Path(
-            value
-        )
-
-        if (
-            path.exists()
-            and path.is_file()
-        ):
-
-            return path
-
-    audio_folder = (
-        PROJECT_FOLDER
-        / "audio"
-    )
-
-    if not audio_folder.exists():
-        return None
-
-    title = safe_filename(
-        article.get(
-            "title"
-        )
-    ).lower()
-
-    candidates = []
-
-    for file in audio_folder.iterdir():
-
-        if not file.is_file():
-            continue
-
-        if (
-            file.suffix.lower()
-            not in AUDIO_EXTENSIONS
-        ):
-            continue
-
-        file_title = safe_filename(
-            file.stem
-        ).lower()
-
-        if (
-            title[:35] in file_title
-            or
-            file_title[:35] in title
-        ):
-
-            candidates.append(
-                file
-            )
-
-    if not candidates:
-        return None
-
-    candidates.sort(
-        key=lambda item:
-            item.stat().st_mtime,
-        reverse=True
-    )
-
-    return candidates[0]
-
-
-# ============================================================
-# STORY SCENES
-# ============================================================
-
-def get_valid_scenes(article):
-
-    scenes = article.get(
-        "scene_plan",
-        []
-    )
-
-    if not isinstance(
-        scenes,
-        list
-    ):
-
-        return []
-
-    valid = []
-
-    used_files = set()
-
-    story_folder = (
-        SCENE_FOLDER.resolve()
-    )
-
-    for scene in scenes:
-
-        if not isinstance(
-            scene,
-            dict
-        ):
-            continue
-
-        file_value = clean_text(
-            scene.get(
-                "footage_file"
-            )
-        )
-
-        if not file_value:
-            continue
-
-        path = Path(
-            file_value
-        )
-
-        if not path.exists():
-            continue
-
-        resolved = path.resolve()
-
-        # ====================================================
-        # STORY MEDIA ONLY
-        # ====================================================
-
-        if story_folder not in resolved.parents:
-
-            print(
-                "Rejected external/default media:",
-                resolved
-            )
-
-            continue
-
-        identity = str(
-            resolved
-        ).lower()
-
-        if identity in used_files:
-
-            print(
-                "Duplicate scene skipped:",
-                resolved.name
-            )
-
-            continue
-
-        extension = (
-            resolved.suffix.lower()
-        )
-
-        if extension in IMAGE_EXTENSIONS:
-
-            media_type = "IMAGE"
-
-        elif extension in VIDEO_EXTENSIONS:
-
-            if not has_video_stream(
-                resolved
-            ):
-
-                print(
-                    "Rejected non-video:",
-                    resolved
-                )
-
-                continue
-
-            media_type = "VIDEO"
-
-        else:
-
-            continue
-
-        valid.append(
-            {
-                "path":
-                    resolved,
-
-                "type":
-                    media_type,
-            }
-        )
-
-        used_files.add(
-            identity
-        )
-
-    return valid
-
-
-# ============================================================
-# PILLOW IMAGE PREPARATION
+# IMAGE PREPARATION
 # ============================================================
 
 def prepare_image(
-    source,
+    source_file,
     destination
 ):
 
-    print()
-    print(
-        "Preparing image with Pillow..."
-    )
-
     with Image.open(
-        source
+        source_file
     ) as image:
 
         image = image.convert(
             "RGB"
         )
 
-        source_width = (
-            image.width
+        source_width, source_height = (
+            image.size
         )
 
-        source_height = (
-            image.height
+        target_ratio = (
+            WIDTH
+            / HEIGHT
         )
 
-        # ----------------------------------------------------
-        # SCALE TO FIT
-        # ----------------------------------------------------
-
-        scale = min(
-            WIDTH / source_width,
-            HEIGHT / source_height
+        source_ratio = (
+            source_width
+            / source_height
         )
 
-        resized_width = max(
-            1,
-            int(
-                source_width
-                * scale
-            )
-        )
+        if source_ratio > target_ratio:
 
-        resized_height = max(
-            1,
-            int(
+            new_width = int(
                 source_height
-                * scale
+                * target_ratio
             )
-        )
+
+            left = (
+                source_width
+                - new_width
+            ) // 2
+
+            image = image.crop(
+                (
+                    left,
+                    0,
+                    left
+                    + new_width,
+                    source_height,
+                )
+            )
+
+        else:
+
+            new_height = int(
+                source_width
+                / target_ratio
+            )
+
+            top = (
+                source_height
+                - new_height
+            ) // 2
+
+            image = image.crop(
+                (
+                    0,
+                    top,
+                    source_width,
+                    top
+                    + new_height,
+                )
+            )
 
         image = image.resize(
-            (
-                resized_width,
-                resized_height
-            ),
-            Image.Resampling.LANCZOS
-        )
-
-        # ----------------------------------------------------
-        # CREATE BLACK 720P CANVAS
-        # ----------------------------------------------------
-
-        canvas = Image.new(
-            "RGB",
             (
                 WIDTH,
                 HEIGHT
             ),
-            (
-                0,
-                0,
-                0
-            )
+            Image.Resampling.LANCZOS
         )
 
-        x = (
-            WIDTH
-            - resized_width
-        ) // 2
-
-        y = (
-            HEIGHT
-            - resized_height
-        ) // 2
-
-        canvas.paste(
-            image,
-            (
-                x,
-                y
-            )
+        destination.parent.mkdir(
+            parents=True,
+            exist_ok=True
         )
 
-        canvas.save(
+        image.save(
             destination,
             "JPEG",
-            quality=90,
-            optimize=True
+            quality=92
         )
 
-    print(
-        "Prepared image ✓"
-    )
+    return destination
 
 
 # ============================================================
-# IMAGE TO VIDEO
+# PREPARE VIDEO SCENE
 # ============================================================
 
-def render_image_scene(
+def create_video_scene(
     source,
-    destination,
-    duration,
-    number
-):
-
-    prepared_image = (
-        PREPARED_IMAGE_FOLDER
-        / f"prepared_{number:02d}.jpg"
-    )
-
-    prepare_image(
-        source,
-        prepared_image
-    )
-
-    # ========================================================
-    # FFmpeg now receives an already-prepared 1280x720 image.
-    #
-    # No scale filter.
-    # No zoom.
-    # No pad.
-    # No resize workload.
-    # ========================================================
-
-    run_ffmpeg(
-        [
-            "-y",
-
-            "-loop",
-            "1",
-
-            "-framerate",
-            str(FPS),
-
-            "-i",
-            str(prepared_image),
-
-            "-t",
-            f"{duration:.3f}",
-
-            "-an",
-
-            "-c:v",
-            VIDEO_CODEC,
-
-            "-preset",
-            VIDEO_PRESET,
-
-            "-crf",
-            VIDEO_CRF,
-
-            "-pix_fmt",
-            "yuv420p",
-
-            "-r",
-            str(FPS),
-
-            str(destination),
-        ]
-    )
-
-
-# ============================================================
-# VIDEO SCENE
-# ============================================================
-
-def render_video_scene(
-    source,
-    destination,
+    output,
     duration
 ):
-
-    video_filter = (
-        f"scale={WIDTH}:{HEIGHT}:"
-        "force_original_aspect_ratio=decrease,"
-        f"pad={WIDTH}:{HEIGHT}:"
-        "(ow-iw)/2:(oh-ih)/2,"
-        "setsar=1,"
-        f"fps={FPS},"
-        "format=yuv420p"
-    )
 
     run_ffmpeg(
         [
@@ -877,7 +945,9 @@ def render_video_scene(
             "-1",
 
             "-i",
-            str(source),
+            str(
+                source
+            ),
 
             "-t",
             f"{duration:.3f}",
@@ -885,7 +955,17 @@ def render_video_scene(
             "-an",
 
             "-vf",
-            video_filter,
+            (
+                f"scale="
+                f"{WIDTH}:"
+                f"{HEIGHT}:"
+                f"force_original_aspect_ratio="
+                f"increase,"
+                f"crop="
+                f"{WIDTH}:"
+                f"{HEIGHT},"
+                f"fps={FPS}"
+            ),
 
             "-c:v",
             VIDEO_CODEC,
@@ -897,42 +977,264 @@ def render_video_scene(
             VIDEO_CRF,
 
             "-pix_fmt",
-            "yuv420p",
+            PIXEL_FORMAT,
 
-            "-r",
-            str(FPS),
+            "-movflags",
+            "+faststart",
 
-            str(destination),
+            str(
+                output
+            ),
         ]
     )
 
 
 # ============================================================
-# JOIN SCENES
+# PREPARE IMAGE SCENE
 # ============================================================
 
-def join_scenes(rendered_files):
+def create_image_scene(
+    source,
+    output,
+    duration,
+    index
+):
 
-    list_file = (
-        TEMP_FOLDER
-        / "scene_list.txt"
+    prepared_image = (
+        PREPARED_IMAGE_FOLDER
+        / (
+            f"scene_"
+            f"{index:03d}.jpg"
+        )
     )
 
-    with open(
-        list_file,
-        "w",
-        encoding="utf-8"
-    ) as file:
+    prepare_image(
+        source,
+        prepared_image
+    )
 
-        for video in rendered_files:
+    total_frames = max(
+        1,
+        int(
+            duration
+            * FPS
+        )
+    )
 
-            file.write(
-                f"file '{video.resolve().as_posix()}'\n"
+    # Very subtle zoom to avoid static image.
+
+    zoom_direction = (
+        1
+        if index % 2
+        else -1
+    )
+
+    if zoom_direction > 0:
+
+        zoom_expression = (
+            "min(zoom+0.00035,1.06)"
+        )
+
+    else:
+
+        zoom_expression = (
+            "if(eq(on,1),1.06,"
+            "max(zoom-0.00035,1.0))"
+        )
+
+    filter_value = (
+        f"zoompan="
+        f"z='{zoom_expression}':"
+        f"x='iw/2-(iw/zoom/2)':"
+        f"y='ih/2-(ih/zoom/2)':"
+        f"d={total_frames}:"
+        f"s={WIDTH}x{HEIGHT}:"
+        f"fps={FPS},"
+        f"format=yuv420p"
+    )
+
+    run_ffmpeg(
+        [
+            "-y",
+
+            "-loop",
+            "1",
+
+            "-i",
+            str(
+                prepared_image
+            ),
+
+            "-t",
+            f"{duration:.3f}",
+
+            "-an",
+
+            "-vf",
+            filter_value,
+
+            "-c:v",
+            VIDEO_CODEC,
+
+            "-preset",
+            VIDEO_PRESET,
+
+            "-crf",
+            VIDEO_CRF,
+
+            "-pix_fmt",
+            PIXEL_FORMAT,
+
+            str(
+                output
+            ),
+        ]
+    )
+
+
+# ============================================================
+# CREATE ALL SCENE CLIPS
+# ============================================================
+
+def prepare_scenes(
+    scenes,
+    voice_duration
+):
+
+    scene_count = len(
+        scenes
+    )
+
+    if scene_count <= 0:
+
+        raise RuntimeError(
+            "No valid scenes."
+        )
+
+    # Make combined scene video at least
+    # as long as narration.
+
+    scene_duration = max(
+        MIN_SCENE_SECONDS,
+        float(
+            voice_duration
+        )
+        / float(
+            scene_count
+        )
+    )
+
+    prepared = []
+
+    for index, scene in enumerate(
+        scenes,
+        start=1
+    ):
+
+        source = scene[
+            "_resolved_file"
+        ]
+
+        output = (
+            PREPARED_VIDEO_FOLDER
+            / (
+                f"scene_"
+                f"{index:03d}.mp4"
+            )
+        )
+
+        print()
+
+        print(
+            f"Preparing scene "
+            f"{index}/"
+            f"{scene_count}"
+        )
+
+        print(
+            source
+        )
+
+        extension = (
+            source.suffix.lower()
+        )
+
+        if extension in VIDEO_EXTENSIONS:
+
+            create_video_scene(
+                source,
+                output,
+                scene_duration
             )
 
-    joined_file = (
+        elif extension in IMAGE_EXTENSIONS:
+
+            create_image_scene(
+                source,
+                output,
+                scene_duration,
+                index
+            )
+
+        else:
+
+            continue
+
+        if (
+            output.exists()
+            and output.stat().st_size
+            > 0
+        ):
+
+            prepared.append(
+                output
+            )
+
+    return prepared
+
+
+# ============================================================
+# CONCAT SCENES
+# ============================================================
+
+def join_scenes(
+    scene_files,
+    output_file
+):
+
+    if not scene_files:
+
+        raise RuntimeError(
+            "No prepared scene files."
+        )
+
+    concat_file = (
         TEMP_FOLDER
-        / "joined_scenes.mp4"
+        / "concat.txt"
+    )
+
+    lines = []
+
+    for file in scene_files:
+
+        path = (
+            file.resolve()
+            .as_posix()
+            .replace(
+                "'",
+                r"'\''"
+            )
+        )
+
+        lines.append(
+            f"file '{path}'"
+        )
+
+    concat_file.write_text(
+        "\n".join(
+            lines
+        ),
+        encoding="utf-8"
     )
 
     run_ffmpeg(
@@ -946,32 +1248,421 @@ def join_scenes(rendered_files):
             "0",
 
             "-i",
-            str(list_file),
+            str(
+                concat_file
+            ),
 
-            "-c",
+            "-an",
+
+            "-c:v",
             "copy",
 
-            str(joined_file),
+            str(
+                output_file
+            ),
         ]
     )
 
-    return joined_file
+    return output_file
 
 
 # ============================================================
-# FINAL AUDIO MIX
+# SUBTITLE HELPERS
+# ============================================================
+
+def srt_timestamp(seconds):
+
+    seconds = max(
+        0.0,
+        float(
+            seconds
+        )
+    )
+
+    milliseconds = int(
+        round(
+            seconds
+            * 1000
+        )
+    )
+
+    hours = (
+        milliseconds
+        // 3_600_000
+    )
+
+    milliseconds %= (
+        3_600_000
+    )
+
+    minutes = (
+        milliseconds
+        // 60_000
+    )
+
+    milliseconds %= (
+        60_000
+    )
+
+    secs = (
+        milliseconds
+        // 1000
+    )
+
+    millis = (
+        milliseconds
+        % 1000
+    )
+
+    return (
+        f"{hours:02d}:"
+        f"{minutes:02d}:"
+        f"{secs:02d},"
+        f"{millis:03d}"
+    )
+
+
+def split_subtitle_text(text):
+
+    text = clean_text(
+        text
+    )
+
+    if not text:
+
+        return []
+
+    sentences = [
+
+        part.strip()
+
+        for part in re.split(
+            r"(?<=[।!?])\s+",
+            text
+        )
+
+        if part.strip()
+    ]
+
+    if not sentences:
+
+        sentences = [
+            text
+        ]
+
+    chunks = []
+
+    for sentence in sentences:
+
+        words = (
+            sentence.split()
+        )
+
+        # Keep subtitles short
+        # and easy to read.
+
+        current = []
+
+        for word in words:
+
+            current.append(
+                word
+            )
+
+            if len(current) >= 7:
+
+                chunks.append(
+                    " ".join(
+                        current
+                    )
+                )
+
+                current = []
+
+        if current:
+
+            chunks.append(
+                " ".join(
+                    current
+                )
+            )
+
+    return chunks
+
+
+# ============================================================
+# CREATE SRT
+# ============================================================
+
+def create_subtitle_file(
+    article,
+    voice_duration,
+    output_file
+):
+
+    narration = clean_text(
+
+        article.get(
+            "narration_script"
+        )
+
+        or article.get(
+            "hindi_script"
+        )
+
+        or ""
+    )
+
+    if not narration:
+
+        raise RuntimeError(
+            "Hindi narration script "
+            "missing. Cannot create subtitles."
+        )
+
+    chunks = (
+        split_subtitle_text(
+            narration
+        )
+    )
+
+    if not chunks:
+
+        raise RuntimeError(
+            "Subtitle chunks could "
+            "not be created."
+        )
+
+    duration = float(
+        voice_duration
+    )
+
+    weights = [
+
+        max(
+            1,
+            len(
+                re.sub(
+                    r"\s+",
+                    "",
+                    chunk
+                )
+            )
+        )
+
+        for chunk
+        in chunks
+    ]
+
+    total_weight = sum(
+        weights
+    )
+
+    current_time = 0.0
+
+    srt_lines = []
+
+    for index, (
+        chunk,
+        weight
+    ) in enumerate(
+        zip(
+            chunks,
+            weights
+        ),
+        start=1
+    ):
+
+        if index == len(
+            chunks
+        ):
+
+            end_time = (
+                duration
+            )
+
+        else:
+
+            calculated = (
+                duration
+                * weight
+                / total_weight
+            )
+
+            end_time = min(
+                duration,
+                current_time
+                + calculated
+            )
+
+        # Safety.
+
+        if end_time <= current_time:
+
+            end_time = min(
+                duration,
+                current_time
+                + 0.5
+            )
+
+        srt_lines.extend(
+            [
+                str(
+                    index
+                ),
+
+                (
+                    f"{srt_timestamp(current_time)} "
+                    f"--> "
+                    f"{srt_timestamp(end_time)}"
+                ),
+
+                chunk,
+
+                "",
+            ]
+        )
+
+        current_time = (
+            end_time
+        )
+
+    output_file.write_text(
+        "\n".join(
+            srt_lines
+        ),
+        encoding="utf-8"
+    )
+
+    return output_file
+
+
+# ============================================================
+# SUBTITLE FONT
+# ============================================================
+
+def subtitle_font():
+
+    # Windows options.
+
+    windows_fonts = [
+
+        Path(
+            r"C:\Windows\Fonts\Nirmala.ttf"
+        ),
+
+        Path(
+            r"C:\Windows\Fonts\NirmalaB.ttf"
+        ),
+
+        Path(
+            r"C:\Windows\Fonts\mangal.ttf"
+        ),
+
+    ]
+
+    for font in windows_fonts:
+
+        if font.exists():
+
+            return (
+                "Nirmala UI"
+            )
+
+    # GitHub Ubuntu:
+    # installed with fonts-noto-core.
+
+    return (
+        "Noto Sans Devanagari"
+    )
+
+
+# ============================================================
+# FFMPEG SUBTITLE FILTER
+# ============================================================
+
+def subtitle_filter(
+    subtitle_file
+):
+
+    path = (
+        subtitle_file
+        .resolve()
+        .as_posix()
+    )
+
+    # Required by FFmpeg on Windows:
+    # C:/... becomes C\:/...
+
+    path = (
+        path
+        .replace(
+            ":",
+            r"\:"
+        )
+        .replace(
+            "'",
+            r"\'"
+        )
+    )
+
+    font = (
+        subtitle_font()
+    )
+
+    style = (
+        f"FontName={font},"
+        "FontSize=25,"
+        "PrimaryColour=&H00FFFFFF,"
+        "OutlineColour=&H00000000,"
+        "BackColour=&H78000000,"
+        "Bold=1,"
+        "BorderStyle=1,"
+        "Outline=2,"
+        "Shadow=1,"
+        "Alignment=2,"
+        "MarginL=65,"
+        "MarginR=65,"
+        "MarginV=35"
+    )
+
+    return (
+        "subtitles="
+        f"filename='{path}':"
+        f"force_style='{style}'"
+    )
+
+
+# ============================================================
+# FINAL RENDER
 # ============================================================
 
 def render_final(
     joined_video,
     voice_file,
     output_file,
-    voice_duration
+    voice_duration,
+    subtitle_file
 ):
 
-    if MUSIC_FILE.exists():
+    video_filter = (
+        subtitle_filter(
+            subtitle_file
+        )
+    )
+
+    # --------------------------------------------------------
+    # WITH BACKGROUND MUSIC
+    # --------------------------------------------------------
+
+    if (
+        MUSIC_FILE.exists()
+        and MUSIC_FILE.stat().st_size
+        > 0
+    ):
 
         print()
+
         print(
             "Background music: ON"
         )
@@ -981,7 +1672,12 @@ def render_final(
             f"{int(MUSIC_VOLUME * 100)}%"
         )
 
-        filter_complex = (
+        print(
+            "Hindi subtitles: ON"
+        )
+
+        audio_filter = (
+
             f"[1:a]"
             f"volume={VOICE_VOLUME},"
             f"aresample={AUDIO_SAMPLE_RATE},"
@@ -1011,19 +1707,28 @@ def render_final(
                 "-1",
 
                 "-i",
-                str(joined_video),
+                str(
+                    joined_video
+                ),
 
                 "-i",
-                str(voice_file),
+                str(
+                    voice_file
+                ),
 
                 "-stream_loop",
                 "-1",
 
                 "-i",
-                str(MUSIC_FILE),
+                str(
+                    MUSIC_FILE
+                ),
 
                 "-filter_complex",
-                filter_complex,
+                audio_filter,
+
+                "-vf",
+                video_filter,
 
                 "-map",
                 "0:v:0",
@@ -1035,7 +1740,16 @@ def render_final(
                 f"{voice_duration:.3f}",
 
                 "-c:v",
-                "copy",
+                VIDEO_CODEC,
+
+                "-preset",
+                VIDEO_PRESET,
+
+                "-crf",
+                VIDEO_CRF,
+
+                "-pix_fmt",
+                PIXEL_FORMAT,
 
                 "-c:a",
                 AUDIO_CODEC,
@@ -1044,7 +1758,9 @@ def render_final(
                 AUDIO_BITRATE,
 
                 "-ar",
-                str(AUDIO_SAMPLE_RATE),
+                str(
+                    AUDIO_SAMPLE_RATE
+                ),
 
                 "-ac",
                 "2",
@@ -1052,15 +1768,26 @@ def render_final(
                 "-movflags",
                 "+faststart",
 
-                str(output_file),
+                str(
+                    output_file
+                ),
             ]
         )
 
         return True
 
+    # --------------------------------------------------------
+    # WITHOUT MUSIC
+    # --------------------------------------------------------
+
     print()
+
     print(
         "Background music: OFF"
+    )
+
+    print(
+        "Hindi subtitles: ON"
     )
 
     run_ffmpeg(
@@ -1071,10 +1798,17 @@ def render_final(
             "-1",
 
             "-i",
-            str(joined_video),
+            str(
+                joined_video
+            ),
 
             "-i",
-            str(voice_file),
+            str(
+                voice_file
+            ),
+
+            "-vf",
+            video_filter,
 
             "-map",
             "0:v:0",
@@ -1086,7 +1820,16 @@ def render_final(
             f"{voice_duration:.3f}",
 
             "-c:v",
-            "copy",
+            VIDEO_CODEC,
+
+            "-preset",
+            VIDEO_PRESET,
+
+            "-crf",
+            VIDEO_CRF,
+
+            "-pix_fmt",
+            PIXEL_FORMAT,
 
             "-c:a",
             AUDIO_CODEC,
@@ -1094,7 +1837,20 @@ def render_final(
             "-b:a",
             AUDIO_BITRATE,
 
-            str(output_file),
+            "-ar",
+            str(
+                AUDIO_SAMPLE_RATE
+            ),
+
+            "-ac",
+            "2",
+
+            "-movflags",
+            "+faststart",
+
+            str(
+                output_file
+            ),
         ]
     )
 
@@ -1132,6 +1888,11 @@ def clean_temp():
         exist_ok=True
     )
 
+    PREPARED_VIDEO_FOLDER.mkdir(
+        parents=True,
+        exist_ok=True
+    )
+
 
 # ============================================================
 # MAIN
@@ -1140,48 +1901,50 @@ def clean_temp():
 def main():
 
     print()
-    print("=" * 72)
+
+    line()
 
     print(
         "THRAANSH ULTRA-FAST STORY RENDERER"
     )
 
-    print("=" * 72)
+    line()
 
     print()
+
     print(
-        "Resolution: 1280x720"
+        "Resolution: "
+        f"{WIDTH}x{HEIGHT}"
     )
 
     print(
-        "FPS: 24"
+        f"FPS: {FPS}"
     )
 
     print(
-        "Pillow pre-resize enabled ✓"
-    )
-
-    print(
-        "Presenter fallback disabled ✓"
+        f"FFmpeg: "
+        f"{FFMPEG_EXE}"
     )
 
     print()
+
     print(
-        "FFmpeg:"
+        "Hindi subtitles: ENABLED"
     )
 
     print(
-        FFMPEG_EXE
+        "Presenter fallback: DISABLED"
     )
+
+    # ========================================================
+    # VALIDATE FFMPEG
+    # ========================================================
 
     if not FFMPEG_EXE.exists():
 
-        print()
-        print(
-            "ERROR: bundled FFmpeg missing."
+        raise RuntimeError(
+            "FFmpeg executable missing."
         )
-
-        return
 
     # ========================================================
     # LOAD ARTICLE
@@ -1189,15 +1952,15 @@ def main():
 
     queue = load_queue()
 
-    article = get_next_article(
+    article = get_article(
         queue
     )
 
     if article is None:
 
-        print()
         print(
-            "No render-ready article."
+            "No production article "
+            "waiting for final video."
         )
 
         return
@@ -1206,15 +1969,11 @@ def main():
         article.get(
             "title"
         )
+        or "THRAANSH News"
     )
 
-    previous_status = clean_text(
-        article.get(
-            "status"
-        )
-    ).upper()
-
     print()
+
     print(
         "ARTICLE:"
     )
@@ -1233,18 +1992,17 @@ def main():
 
     if voice_file is None:
 
-        print()
-        print(
-            "ERROR: Hindi voice not found."
+        raise RuntimeError(
+            "Hindi voice file "
+            "could not be found."
         )
-
-        return
 
     voice_duration = get_duration(
         voice_file
     )
 
     print()
+
     print(
         "Hindi voice:"
     )
@@ -1259,7 +2017,7 @@ def main():
     )
 
     # ========================================================
-    # SCENES
+    # STORY SCENES
     # ========================================================
 
     scenes = get_valid_scenes(
@@ -1267,123 +2025,99 @@ def main():
     )
 
     print()
+
     print(
-        "Story scenes:",
-        len(scenes)
+        f"Valid story scenes: "
+        f"{len(scenes)}"
     )
 
-    if len(
-        scenes
-    ) < MIN_SCENES:
+    if len(scenes) < MIN_SCENES:
 
-        print()
-        print(
-            "ERROR:"
+        raise RuntimeError(
+            f"At least "
+            f"{MIN_SCENES} "
+            f"valid story scenes required."
         )
 
-        print(
-            "At least 3 story visuals required."
-        )
-
-        return
-
-    scene_duration = (
-        voice_duration
-        / len(scenes)
-    )
-
     # ========================================================
-    # RENDER
+    # CLEAN TEMP
     # ========================================================
+
+    clean_temp()
 
     try:
 
-        clean_temp()
+        # ====================================================
+        # PREPARE SCENES
+        # ====================================================
 
-        rendered_files = []
-
-        for number, scene in enumerate(
+        prepared_scenes = prepare_scenes(
             scenes,
-            start=1
-        ):
+            voice_duration
+        )
 
-            destination = (
-                TEMP_FOLDER
-                / f"scene_{number:02d}.mp4"
-            )
+        if len(
+            prepared_scenes
+        ) < MIN_SCENES:
 
-            print()
-            print("=" * 60)
-
-            print(
-                f"SCENE {number}"
-            )
-
-            print("=" * 60)
-
-            print(
-                "Type:",
-                scene["type"]
-            )
-
-            print(
-                "Source:",
-                scene["path"]
-            )
-
-            print(
-                f"Duration: "
-                f"{scene_duration:.2f}s"
-            )
-
-            if (
-                scene["type"]
-                == "IMAGE"
-            ):
-
-                render_image_scene(
-                    scene["path"],
-                    destination,
-                    scene_duration,
-                    number
-                )
-
-            else:
-
-                render_video_scene(
-                    scene["path"],
-                    destination,
-                    scene_duration
-                )
-
-            rendered_files.append(
-                destination
-            )
-
-            print()
-            print(
-                f"Scene {number} ready ✓"
+            raise RuntimeError(
+                "Too few scenes were "
+                "successfully prepared."
             )
 
         # ====================================================
-        # JOIN
+        # JOIN SCENES
         # ====================================================
+
+        joined_video = (
+            TEMP_FOLDER
+            / "joined_story.mp4"
+        )
+
+        join_scenes(
+            prepared_scenes,
+            joined_video
+        )
+
+        if not joined_video.exists():
+
+            raise RuntimeError(
+                "Joined story video "
+                "was not created."
+            )
+
+        # ====================================================
+        # SUBTITLES
+        # ====================================================
+
+        subtitle_file = (
+            TEMP_FOLDER
+            / (
+                safe_filename(
+                    title
+                )
+                + "_Hindi_Subtitles.srt"
+            )
+        )
+
+        create_subtitle_file(
+            article,
+            voice_duration,
+            subtitle_file
+        )
 
         print()
-        print("=" * 72)
 
         print(
-            "JOINING SCENES"
+            "Hindi subtitle file:"
         )
 
-        print("=" * 72)
-
-        joined_video = join_scenes(
-            rendered_files
+        print(
+            subtitle_file
         )
 
         # ====================================================
-        # FINAL
+        # FINAL OUTPUT
         # ====================================================
 
         output_file = (
@@ -1397,25 +2131,37 @@ def main():
         )
 
         print()
-        print("=" * 72)
 
         print(
-            "FINAL VIDEO RENDER"
+            "Rendering final "
+            "THRAANSH video..."
         )
-
-        print("=" * 72)
 
         music_used = render_final(
             joined_video,
             voice_file,
             output_file,
-            voice_duration
+            voice_duration,
+            subtitle_file
         )
+
+        # ====================================================
+        # VALIDATION
+        # ====================================================
 
         if not output_file.exists():
 
             raise RuntimeError(
                 "Final MP4 not created."
+            )
+
+        if (
+            output_file.stat().st_size
+            <= 0
+        ):
+
+            raise RuntimeError(
+                "Final MP4 is empty."
             )
 
         if not has_video_stream(
@@ -1458,21 +2204,67 @@ def main():
         )
 
         article[
-            "video_resolution"
-        ] = "1280x720"
+            "video_width"
+        ] = WIDTH
+
+        article[
+            "video_height"
+        ] = HEIGHT
 
         article[
             "video_fps"
         ] = FPS
 
         article[
-            "background_music_enabled"
-        ] = music_used
+            "video_status"
+        ] = "READY"
 
         article[
-            "video_render_policy"
+            "background_music"
+        ] = bool(
+            music_used
+        )
+
+        article[
+            "music_volume"
         ] = (
-            "PILLOW_FAST_STORY_ONLY"
+            MUSIC_VOLUME
+            if music_used
+            else 0
+        )
+
+        article[
+            "narration_language"
+        ] = "hi"
+
+        article[
+            "subtitles_burned_in"
+        ] = True
+
+        article[
+            "subtitle_language"
+        ] = "hi"
+
+        article[
+            "subtitle_status"
+        ] = "BURNED_IN"
+
+        article[
+            "subtitle_file"
+        ] = str(
+            subtitle_file
+        )
+
+        article[
+            "subtitle_source"
+        ] = (
+            "narration_script"
+            if clean_text(
+                article.get(
+                    "narration_script"
+                )
+            )
+            else "hindi_script"
         )
 
         article[
@@ -1484,56 +2276,62 @@ def main():
         ] = None
 
         article[
+            "video_generated_at"
+        ] = (
+            datetime.now()
+            .isoformat()
+        )
+
+        article[
             "updated_at"
-        ] = datetime.now().isoformat()
+        ] = (
+            datetime.now()
+            .isoformat()
+        )
 
         save_queue(
             queue
         )
 
-        print()
-        print("=" * 72)
-
-        print(
-            "THRAANSH VIDEO READY"
-        )
-
-        print("=" * 72)
+        # ====================================================
+        # SUCCESS OUTPUT
+        # ====================================================
 
         print()
+
+        line()
+
         print(
-            "Final video:"
+            "THRAANSH VIDEO GENERATED SUCCESSFULLY"
         )
+
+        line()
+
+        print()
 
         print(
             output_file
         )
 
         print()
+
         print(
             f"Size: "
             f"{size_mb:.2f} MB"
         )
 
         print()
-        print(
-            "720p ✓"
-        )
 
         print(
-            "Fast Pillow images ✓"
-        )
-
-        print(
-            "Story-only visuals ✓"
-        )
-
-        print(
-            "No presenter fallback ✓"
+            "Story footage ✓"
         )
 
         print(
             "Hindi narration ✓"
+        )
+
+        print(
+            "Hindi burned-in subtitles ✓"
         )
 
         if music_used:
@@ -1542,21 +2340,39 @@ def main():
                 "Background music ✓"
             )
 
-        print()
-        print(
-            "Status:"
-        )
+        else:
 
-        print(
-            f"{previous_status} "
-            "-> VIDEO_READY"
-        )
+            print(
+                "Background music not used"
+            )
+
+        print()
 
     except Exception as error:
 
+        # ====================================================
+        # SAVE FAILURE
+        # ====================================================
+
+        article[
+            "video_status"
+        ] = "FAILED"
+
         article[
             "status"
-        ] = "MULTI_VIDEO_FAILED"
+        ] = "VIDEO_FAILED"
+
+        article[
+            "retry_count"
+        ] = (
+            int(
+                article.get(
+                    "retry_count"
+                )
+                or 0
+            )
+            + 1
+        )
 
         article[
             "last_error"
@@ -1566,31 +2382,64 @@ def main():
 
         article[
             "updated_at"
-        ] = datetime.now().isoformat()
+        ] = (
+            datetime.now()
+            .isoformat()
+        )
 
         save_queue(
             queue
         )
 
         print()
-        print("=" * 72)
+
+        line()
 
         print(
-            "RENDER FAILED"
+            "THRAANSH VIDEO RENDER FAILED"
         )
 
-        print("=" * 72)
+        line()
 
         print()
+
         print(
             error
         )
 
+        raise
+
 
 # ============================================================
-# START
+# ENTRY POINT
 # ============================================================
 
 if __name__ == "__main__":
 
-    main()
+    try:
+
+        main()
+
+    except KeyboardInterrupt:
+
+        print()
+
+        print(
+            "Renderer interrupted."
+        )
+
+        sys.exit(
+            130
+        )
+
+    except Exception as error:
+
+        print()
+
+        print(
+            f"FATAL: {error}"
+        )
+
+        sys.exit(
+            1
+        )
