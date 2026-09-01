@@ -1,10 +1,10 @@
 {
-  "prepared_slot": "2026-09-02T04:01",
-  "prepare_status": "READY",
+  "prepared_slot": "2026-09-02T04:30",
+  "prepare_status": "FAILED",
   "prepared_title": "Major security breach in Kolkata jail: 3 mobile phones, cash seized from American Centre attack mastermind`s cell",
   "prepared_video": "/home/runner/work/Thraansh/Thraansh/final_videos/Major_security_breach_in_Kolkata_jail__3_mobile_phones,_cash_seized_from_American_Centre_a_THRAANSH_FINAL.mp4",
   "prepared_at_ist": "2026-09-02T04:03:17.103150+05:30",
-  "updated_at_ist": "2026-09-02T04:05:57.856875+05:30",
+  "updated_at_ist": "2026-09-02T04:31:02.697519+05:30",
   "completion_status": "COMPLETE",
   "active_slot": "",
   "completed_slot": "2026-09-02T04:01",
