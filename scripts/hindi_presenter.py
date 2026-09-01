@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import json
 import os
@@ -23,7 +23,7 @@ GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.6-flash").strip()
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "").strip()
 GROQ_MODEL = os.getenv(
     "GROQ_MODEL",
-    "llama-3.3-70b-versatile"
+    "openai/gpt-oss-20b"
 ).strip()
 
 
@@ -115,7 +115,7 @@ def get_article_body(article):
 
 def remove_greeting(text):
     text = str(text or "").strip()
-    patterns = [r"^\s*नमस्कार[।,!:\-\s]*", r"^\s*नमस्ते[।,!:\-\s]*", r"^\s*हेलो[।,!:\-\s]*", r"^\s*स्वागत है[।,!:\-\s]*", r"^\s*THRAANSH में आपका स्वागत है[।,!:\-\s]*", r"^\s*थ्रांश में आपका स्वागत है[।,!:\-\s]*"]
+    patterns = [r"^\s*à¤¨à¤®à¤¸à¥à¤•à¤¾à¤°[à¥¤,!:\-\s]*", r"^\s*à¤¨à¤®à¤¸à¥à¤¤à¥‡[à¥¤,!:\-\s]*", r"^\s*à¤¹à¥‡à¤²à¥‹[à¥¤,!:\-\s]*", r"^\s*à¤¸à¥à¤µà¤¾à¤—à¤¤ à¤¹à¥ˆ[à¥¤,!:\-\s]*", r"^\s*THRAANSH à¤®à¥‡à¤‚ à¤†à¤ªà¤•à¤¾ à¤¸à¥à¤µà¤¾à¤—à¤¤ à¤¹à¥ˆ[à¥¤,!:\-\s]*", r"^\s*à¤¥à¥à¤°à¤¾à¤‚à¤¶ à¤®à¥‡à¤‚ à¤†à¤ªà¤•à¤¾ à¤¸à¥à¤µà¤¾à¤—à¤¤ à¤¹à¥ˆ[à¥¤,!:\-\s]*"]
     for pattern in patterns:
         text = re.sub(pattern, "", text, count=1, flags=re.IGNORECASE)
     return text.strip()
@@ -129,7 +129,7 @@ def split_sentences(text):
     text = clean_text(text)
     if not text:
         return []
-    return [x.strip() for x in re.split(r"(?<=[।.!?])\s+", text) if x.strip()]
+    return [x.strip() for x in re.split(r"(?<=[à¥¤.!?])\s+", text) if x.strip()]
 
 
 def normalize_for_similarity(text):
@@ -542,3 +542,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

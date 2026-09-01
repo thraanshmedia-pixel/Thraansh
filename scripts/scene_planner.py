@@ -1,4 +1,4 @@
-import json
+﻿import json
 import os
 import re
 from datetime import datetime
@@ -72,7 +72,7 @@ GROQ_API_KEY = os.getenv(
 
 GROQ_MODEL = os.getenv(
     "GROQ_MODEL",
-    "llama-3.3-70b-versatile"
+    "openai/gpt-oss-20b"
 ).strip()
 
 
@@ -997,23 +997,23 @@ def main():
 
     print()
     print(
-        "Country policy: STORY SPECIFIC ✓"
+        "Country policy: STORY SPECIFIC âœ“"
     )
 
     print(
-        "Named people: EXACT PERSON FIRST ✓"
+        "Named people: EXACT PERSON FIRST âœ“"
     )
 
     print(
-        "Sports: PLAYER + TEAM + EVENT ✓"
+        "Sports: PLAYER + TEAM + EVENT âœ“"
     )
 
     print(
-        "Random people: NOT ALLOWED ✓"
+        "Random people: NOT ALLOWED âœ“"
     )
 
     print(
-        "Generic foreign fallback: NOT ALLOWED ✓"
+        "Generic foreign fallback: NOT ALLOWED âœ“"
     )
 
     # ========================================================
