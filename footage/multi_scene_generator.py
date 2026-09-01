@@ -1,4 +1,4 @@
-import json
+﻿import json
 import os
 import re
 import time
@@ -1572,7 +1572,7 @@ def try_candidate(
             )
 
         print(
-            f"{media_type} validated ✓"
+            f"{media_type} validated âœ“"
         )
 
         used_urls.add(
@@ -1679,60 +1679,167 @@ def find_for_query(
     query,
     used_urls
 ):
+    """
+    THRAANSH REAL-MEDIA-FIRST SEARCH.
+
+    Priority:
+    1. Wikimedia relevant licensed video
+    2. Pexels relevant contextual video
+    3. Pixabay relevant contextual video
+    4. Wikimedia relevant licensed image
+
+    Exact-person media remains handled separately by
+    find_exact_person_wikimedia().
+    """
+
+    query = clean_text(query)
+
+    if not query:
+        return None
+
     print()
     print("Search:", query)
+    print("Media priority: REAL/RELEVANT LICENSED MEDIA FIRST")
 
-    # 1. Pexels video - contextual only.
-    for candidate in search_pexels_video(query)[:2]:
-        result = try_candidate(
-            article_title,
-            scene_number,
-            mark_contextual(candidate),
-            used_urls
-        )
-        if result:
-            return result
+    # --------------------------------------------------------
+    # 1. WIKIMEDIA VIDEO
+    # --------------------------------------------------------
 
-    # 2. Pixabay video - contextual only.
-    for candidate in search_pixabay_video(query)[:2]:
-        result = try_candidate(
-            article_title,
-            scene_number,
-            mark_contextual(candidate),
-            used_urls
-        )
-        if result:
-            return result
-
-    # 3. Wikimedia video - contextual in this path.
     if not WIKIMEDIA_DISABLED:
-        for candidate in search_wikimedia_video(query)[:1]:
+
+        print("Trying Wikimedia relevant video...")
+
+        try:
+            candidates = search_wikimedia_video(query)[:3]
+        except Exception as error:
+            print("Wikimedia video search failed:", error)
+            candidates = []
+
+        for candidate in candidates:
+
+            try:
+                result = try_candidate(
+                    article_title,
+                    scene_number,
+                    mark_contextual(candidate),
+                    used_urls
+                )
+
+                if result:
+                    print("Selected Wikimedia relevant video.")
+                    return result
+
+            except Exception as error:
+                print(
+                    "Wikimedia video candidate rejected:",
+                    error
+                )
+
+    # --------------------------------------------------------
+    # 2. PEXELS VIDEO
+    # --------------------------------------------------------
+
+    print("Trying Pexels contextual video...")
+
+    try:
+        candidates = search_pexels_video(query)[:3]
+    except Exception as error:
+        print("Pexels search failed:", error)
+        candidates = []
+
+    for candidate in candidates:
+
+        try:
             result = try_candidate(
                 article_title,
                 scene_number,
                 mark_contextual(candidate),
                 used_urls
             )
+
             if result:
+                print("Selected Pexels contextual video.")
                 return result
 
-    # 4. Wikimedia image - contextual in this path.
-    if not WIKIMEDIA_DISABLED:
-        for candidate in search_wikimedia_image(query)[:2]:
+        except Exception as error:
+            print(
+                "Pexels candidate rejected:",
+                error
+            )
+
+    # --------------------------------------------------------
+    # 3. PIXABAY VIDEO
+    # --------------------------------------------------------
+
+    print("Trying Pixabay contextual video...")
+
+    try:
+        candidates = search_pixabay_video(query)[:3]
+    except Exception as error:
+        print("Pixabay search failed:", error)
+        candidates = []
+
+    for candidate in candidates:
+
+        try:
             result = try_candidate(
                 article_title,
                 scene_number,
                 mark_contextual(candidate),
                 used_urls
             )
+
             if result:
+                print("Selected Pixabay contextual video.")
                 return result
+
+        except Exception as error:
+            print(
+                "Pixabay candidate rejected:",
+                error
+            )
+
+    # --------------------------------------------------------
+    # 4. WIKIMEDIA IMAGE
+    # --------------------------------------------------------
+
+    if not WIKIMEDIA_DISABLED:
+
+        print("Trying Wikimedia relevant image...")
+
+        try:
+            candidates = search_wikimedia_image(query)[:3]
+        except Exception as error:
+            print("Wikimedia image search failed:", error)
+            candidates = []
+
+        for candidate in candidates:
+
+            try:
+                result = try_candidate(
+                    article_title,
+                    scene_number,
+                    mark_contextual(candidate),
+                    used_urls
+                )
+
+                if result:
+                    print("Selected Wikimedia relevant image.")
+                    return result
+
+            except Exception as error:
+                print(
+                    "Wikimedia image candidate rejected:",
+                    error
+                )
+
+    print(
+        "No acceptable media found for query:",
+        query
+    )
 
     return None
 
-
-# ============================================================
-# MAIN
 # ============================================================
 
 def main():
@@ -1751,43 +1858,43 @@ def main():
 
     print()
     print(
-        "Pexels video first ✓"
+        "Pexels video first âœ“"
     )
 
     print(
-        "Pixabay video second ✓"
+        "Pixabay video second âœ“"
     )
 
     print(
-        "Wikimedia limited fallback ✓"
+        "Wikimedia limited fallback âœ“"
     )
 
     print(
-        "Corrupt image blocking ✓"
+        "Corrupt image blocking âœ“"
     )
 
     print(
-        "Broken video blocking ✓"
+        "Broken video blocking âœ“"
     )
 
     print(
-        "HTML blocking ✓"
+        "HTML blocking âœ“"
     )
 
     print(
-        "Audio blocking ✓"
+        "Audio blocking âœ“"
     )
 
     print(
-        "Duplicate blocking ✓"
+        "Duplicate blocking âœ“"
     )
 
     print(
-        "Named-person stock impersonation blocking ✓"
+        "Named-person stock impersonation blocking âœ“"
     )
 
     print(
-        "Exact-person Wikimedia metadata verification ✓"
+        "Exact-person Wikimedia metadata verification âœ“"
     )
 
     print(
@@ -1940,7 +2047,7 @@ def main():
                 )
 
             print(
-                "Existing validated media ✓"
+                "Existing validated media âœ“"
             )
 
             if existing_type == "VIDEO":
@@ -2149,7 +2256,7 @@ def main():
         print()
         print(
             f"Scene {index}: "
-            f"{media_type}_READY ✓"
+            f"{media_type}_READY âœ“"
         )
 
         print(
