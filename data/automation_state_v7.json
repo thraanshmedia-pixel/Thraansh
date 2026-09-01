@@ -1,14 +1,14 @@
 {
-  "prepared_slot": "2026-09-01T13:00",
+  "prepared_slot": "2026-09-01T15:00",
   "prepare_status": "READY",
-  "prepared_title": "Three live rounds and a magazine seized from passenger’s hand baggage at Chennai airport",
-  "prepared_video": "C:\\Users\\DELL\\PycharmProjects\\THRAANSH_Automation\\final_videos\\Three_live_rounds_and_a_magazine_seized_from_passenger’s_hand_baggage_at_Chennai_airport_THRAANSH_FINAL.mp4",
-  "prepared_at_ist": "2026-09-01T12:28:19.485552+05:30",
-  "updated_at_ist": "2026-09-01T13:04:08.814410+05:30",
+  "prepared_title": "SC to hear plea seeking mandatory disclosure of ethanol content in petrol on August 31",
+  "prepared_video": "/home/runner/work/Thraansh/Thraansh/final_videos/SC_to_hear_plea_seeking_mandatory_disclosure_of_ethanol_content_in_petrol_on_August_31_THRAANSH_FINAL.mp4",
+  "prepared_at_ist": "2026-09-01T15:26:59.304838+05:30",
+  "updated_at_ist": "2026-09-01T15:27:53.329775+05:30",
   "completion_status": "COMPLETE",
   "active_slot": "",
-  "completed_slot": "2026-09-01T13:00",
-  "completed_at_ist": "2026-09-01T13:04:08.813463+05:30",
+  "completed_slot": "2026-09-01T15:00",
+  "completed_at_ist": "2026-09-01T15:27:53.329757+05:30",
   "failed_stage": "RIGHTS CHECK",
   "gemini_retry_not_before": "2026-08-30T12:35:00+05:30"
 }
