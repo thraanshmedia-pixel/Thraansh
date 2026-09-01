@@ -35,7 +35,7 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y ffmpeg fonts-dejavu-core fonts-liberation
+          sudo apt-get install -y ffmpeg fonts-dejavu-core fonts-liberation fonts-noto-core
 
       - name: Install Python dependencies
         run: |
@@ -67,4 +67,5 @@ jobs:
           INSTAGRAM_ACCOUNT_ID: ${{ secrets.INSTAGRAM_ACCOUNT_ID }}
         run: |
           python run_pipeline/run_pipeline.py --worker
+
 
