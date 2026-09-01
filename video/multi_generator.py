@@ -1915,7 +1915,9 @@ def create_subtitle_file(
                     f"{srt_timestamp(end_time)}"
                 ),
 
-                chunk,
+                romanize_hindi(
+                    chunk
+                ),
 
                 "",
             ]
