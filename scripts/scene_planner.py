@@ -6,6 +6,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 from google import genai
+from groq import Groq
 
 
 # ============================================================
@@ -61,6 +62,17 @@ GEMINI_API_KEY = os.getenv(
 GEMINI_MODEL = os.getenv(
     "GEMINI_MODEL",
     "gemini-3.6-flash"
+).strip()
+
+
+GROQ_API_KEY = os.getenv(
+    "GROQ_API_KEY",
+    ""
+).strip()
+
+GROQ_MODEL = os.getenv(
+    "GROQ_MODEL",
+    "llama-3.3-70b-versatile"
 ).strip()
 
 
@@ -646,22 +658,145 @@ def generate_scene_plan(
     client,
     article
 ):
+    """
+    THRAANSH FREE AI SCENE ROUTER.
 
-    response = client.models.generate_content(
-        model=GEMINI_MODEL,
-        contents=build_prompt(
-            article
-        )
+    Gemini primary.
+    Groq automatic fallback.
+    """
+
+    prompt = build_prompt(
+        article
     )
 
-    if not response.text:
+    raw_response = None
+    gemini_error = None
 
-        raise RuntimeError(
-            "Gemini returned an empty scene plan."
+    # ========================================================
+    # PRIMARY: GEMINI
+    # ========================================================
+
+    if client is not None and GEMINI_API_KEY:
+
+        try:
+
+            print(
+                "[AI] Scene planner trying Gemini..."
+            )
+
+            response = client.models.generate_content(
+                model=GEMINI_MODEL,
+                contents=prompt
+            )
+
+            if not response.text:
+
+                raise RuntimeError(
+                    "Gemini returned an empty scene plan."
+                )
+
+            raw_response = response.text
+
+            print(
+                "[AI] Gemini scene plan successful."
+            )
+
+        except Exception as error:
+
+            gemini_error = error
+
+            print()
+            print(
+                "[AI] Gemini scene planning failed:"
+            )
+
+            print(
+                str(error)[:800]
+            )
+
+            if not GROQ_API_KEY:
+                raise
+
+            print()
+            print(
+                "[AI] Switching scene planner "
+                "to Groq FREE fallback..."
+            )
+
+    # ========================================================
+    # FALLBACK: GROQ
+    # ========================================================
+
+    if raw_response is None:
+
+        if not GROQ_API_KEY:
+
+            if gemini_error:
+                raise gemini_error
+
+            raise RuntimeError(
+                "Neither Gemini nor Groq is available "
+                "for scene planning."
+            )
+
+        groq_client = Groq(
+            api_key=GROQ_API_KEY
         )
 
+        completion = (
+            groq_client
+            .chat
+            .completions
+            .create(
+                model=GROQ_MODEL,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": (
+                            "You are the visual news editor "
+                            "for THRAANSH. Return ONLY valid "
+                            "JSON exactly matching the schema "
+                            "requested by the user prompt."
+                        ),
+                    },
+                    {
+                        "role": "user",
+                        "content": prompt,
+                    },
+                ],
+                temperature=0.1,
+                response_format={
+                    "type": "json_object"
+                },
+            )
+        )
+
+        if (
+            not completion.choices
+            or not completion.choices[0].message.content
+        ):
+
+            raise RuntimeError(
+                "Groq returned an empty scene plan."
+            )
+
+        raw_response = (
+            completion
+            .choices[0]
+            .message
+            .content
+        )
+
+        print(
+            "[AI] Groq scene plan successful."
+        )
+
+    # ========================================================
+    # CLEAN + PARSE JSON
+    # ========================================================
+
     raw = clean_json_response(
-        response.text
+        raw_response
     )
 
     try:
@@ -674,7 +809,7 @@ def generate_scene_plan(
 
         print()
         print(
-            "RAW GEMINI RESPONSE:"
+            "RAW AI RESPONSE:"
         )
 
         print(
@@ -682,7 +817,7 @@ def generate_scene_plan(
         )
 
         raise RuntimeError(
-            f"Gemini returned invalid JSON: {error}"
+            f"AI returned invalid scene JSON: {error}"
         )
 
     return plan

@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import json
 import os
@@ -10,6 +10,7 @@ from zoneinfo import ZoneInfo
 
 from dotenv import load_dotenv
 from google import genai
+from groq import Groq
 
 BASE_DIR = Path(__file__).resolve().parents[1]
 QUEUE_FILE = BASE_DIR / "data" / "article_queue.json"
@@ -18,6 +19,13 @@ load_dotenv(ENV_FILE, override=True)
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "").strip()
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.6-flash").strip()
+
+GROQ_API_KEY = os.getenv("GROQ_API_KEY", "").strip()
+GROQ_MODEL = os.getenv(
+    "GROQ_MODEL",
+    "llama-3.3-70b-versatile"
+).strip()
+
 
 TARGET_MIN_SECONDS = 120
 TARGET_PREFERRED_SECONDS = 140
@@ -252,12 +260,133 @@ FULL AVAILABLE ARTICLE MATERIAL:
 
 
 def generate_script_one_call(client, article):
-    response = client.models.generate_content(model=GEMINI_MODEL, contents=build_prompt(article))
-    if not response.text:
-        raise RuntimeError("Gemini returned an empty Hindi script.")
-    narration = remove_greeting(response.text)
+    """
+    THRAANSH FREE AI ROUTER.
+
+    Gemini is primary.
+    Groq is automatic fallback when Gemini quota/rate/service
+    problems prevent generation.
+    """
+
+    prompt = build_prompt(article)
+
+    gemini_error = None
+
+    # --------------------------------------------------------
+    # PRIMARY: GEMINI
+    # --------------------------------------------------------
+
+    if client is not None and GEMINI_API_KEY:
+
+        try:
+
+            print(
+                "[AI] Trying Gemini primary..."
+            )
+
+            response = client.models.generate_content(
+                model=GEMINI_MODEL,
+                contents=prompt
+            )
+
+            if not response.text:
+                raise RuntimeError(
+                    "Gemini returned an empty Hindi script."
+                )
+
+            narration = remove_greeting(
+                response.text
+            )
+
+            if not narration:
+                raise RuntimeError(
+                    "Hindi narration became empty after cleaning."
+                )
+
+            print(
+                "[AI] Gemini narration successful."
+            )
+
+            return narration
+
+        except Exception as error:
+
+            gemini_error = error
+
+            print()
+            print(
+                "[AI] Gemini unavailable/quota/error:"
+            )
+            print(
+                str(error)[:800]
+            )
+
+            if not GROQ_API_KEY:
+                raise
+
+            print()
+            print(
+                "[AI] Switching automatically to Groq FREE fallback..."
+            )
+
+    # --------------------------------------------------------
+    # FALLBACK: GROQ
+    # --------------------------------------------------------
+
+    if not GROQ_API_KEY:
+
+        if gemini_error:
+            raise gemini_error
+
+        raise RuntimeError(
+            "Neither Gemini nor Groq API is available."
+        )
+
+    groq_client = Groq(
+        api_key=GROQ_API_KEY
+    )
+
+    completion = groq_client.chat.completions.create(
+        model=GROQ_MODEL,
+        messages=[
+            {
+                "role": "system",
+                "content": (
+                    "You are the Hindi news script writer for "
+                    "THRAANSH. Follow the supplied instructions "
+                    "strictly. Return only the requested final "
+                    "Hindi narration."
+                ),
+            },
+            {
+                "role": "user",
+                "content": prompt,
+            },
+        ],
+        temperature=0.2,
+    )
+
+    if (
+        not completion.choices
+        or not completion.choices[0].message.content
+    ):
+        raise RuntimeError(
+            "Groq returned an empty Hindi script."
+        )
+
+    narration = remove_greeting(
+        completion.choices[0].message.content
+    )
+
     if not narration:
-        raise RuntimeError("Hindi narration became empty after cleaning.")
+        raise RuntimeError(
+            "Groq Hindi narration became empty after cleaning."
+        )
+
+    print(
+        "[AI] Groq fallback narration successful."
+    )
+
     return narration
 
 
@@ -316,14 +445,42 @@ def main():
     print("Available source characters:", len(source_body)); print()
 
     waiting, retry_at = quota_wait_active(article)
+
     if waiting:
-        message = f"Gemini free-tier quota cooldown active. No API request made. Retry not before: {retry_at.astimezone(IST).isoformat()}"
-        article["status"] = "HINDI_SCRIPT_QUOTA_WAIT"
-        article["last_error"] = message
-        article["updated_at"] = datetime.now().astimezone().isoformat()
-        save_queue(data)
-        print(message)
-        raise RuntimeError(message)
+
+        message = (
+            "Gemini free-tier quota cooldown active until: "
+            f"{retry_at.astimezone(IST).isoformat()}"
+        )
+
+        print(
+            message
+        )
+
+        if GROQ_API_KEY:
+
+            print(
+                "[AI] Groq fallback is available. "
+                "Pipeline will continue."
+            )
+
+        else:
+
+            article["status"] = "HINDI_SCRIPT_QUOTA_WAIT"
+            article["last_error"] = message
+            article["updated_at"] = (
+                datetime.now()
+                .astimezone()
+                .isoformat()
+            )
+
+            save_queue(
+                data
+            )
+
+            raise RuntimeError(
+                message
+            )
 
     try:
         client = genai.Client(api_key=GEMINI_API_KEY)
