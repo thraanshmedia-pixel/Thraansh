@@ -1,14 +1,14 @@
 {
-  "prepared_slot": "2026-09-02T03:36",
-  "prepare_status": "GEMINI_QUOTA_WAIT",
-  "prepared_title": "Aurobindo Pharma US FDA Inspection Ends With 3 Observations At Apitoria Pharma Plant",
-  "prepared_video": "/home/runner/work/Thraansh/Thraansh/final_videos/Aurobindo_Pharma_US_FDA_Inspection_Ends_With_3_Observations_At_Apitoria_Pharma_Plant_THRAANSH_FINAL.mp4",
-  "prepared_at_ist": "2026-09-01T21:24:41.810111+05:30",
-  "updated_at_ist": "2026-09-02T03:36:58.473671+05:30",
+  "prepared_slot": "2026-09-02T04:01",
+  "prepare_status": "READY",
+  "prepared_title": "Major security breach in Kolkata jail: 3 mobile phones, cash seized from American Centre attack mastermind`s cell",
+  "prepared_video": "/home/runner/work/Thraansh/Thraansh/final_videos/Major_security_breach_in_Kolkata_jail__3_mobile_phones,_cash_seized_from_American_Centre_a_THRAANSH_FINAL.mp4",
+  "prepared_at_ist": "2026-09-02T04:03:17.103150+05:30",
+  "updated_at_ist": "2026-09-02T04:05:57.856875+05:30",
   "completion_status": "COMPLETE",
   "active_slot": "",
-  "completed_slot": "2026-09-01T21:22",
-  "completed_at_ist": "2026-09-01T21:26:25.604446+05:30",
+  "completed_slot": "2026-09-02T04:01",
+  "completed_at_ist": "2026-09-02T04:05:57.856859+05:30",
   "failed_stage": "HINDI SCRIPT",
   "gemini_retry_not_before": "2026-09-02T12:35:00+05:30"
 }
