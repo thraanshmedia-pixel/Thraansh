@@ -1,14 +1,14 @@
 {
-  "prepared_slot": "2026-09-01T19:02",
-  "prepare_status": "FAILED",
-  "prepared_title": "Maharashtra: FDA officer cornered over expired biscuits, accused of taking bribe in Sambhajinagar",
-  "prepared_video": "/home/runner/work/Thraansh/Thraansh/final_videos/Maharashtra__FDA_officer_cornered_over_expired_biscuits,_accused_of_taking_bribe_in_Sambha_THRAANSH_FINAL.mp4",
-  "prepared_at_ist": "2026-09-01T17:35:18.923480+05:30",
-  "updated_at_ist": "2026-09-01T19:07:43.034862+05:30",
+  "prepared_slot": "2026-09-01T19:16",
+  "prepare_status": "READY",
+  "prepared_title": "Punjab PSEB Class 10 Supplementary 2026 Result Declared At pseb.ac.in; Direct Link Here",
+  "prepared_video": "/home/runner/work/Thraansh/Thraansh/final_videos/Punjab_PSEB_Class_10_Supplementary_2026_Result_Declared_At_pseb.ac.in;_Direct_Link_Here_THRAANSH_FINAL.mp4",
+  "prepared_at_ist": "2026-09-01T19:19:21.552215+05:30",
+  "updated_at_ist": "2026-09-01T19:20:33.607432+05:30",
   "completion_status": "COMPLETE",
   "active_slot": "",
-  "completed_slot": "2026-09-01T17:32",
-  "completed_at_ist": "2026-09-01T17:36:41.906239+05:30",
+  "completed_slot": "2026-09-01T19:16",
+  "completed_at_ist": "2026-09-01T19:20:33.607418+05:30",
   "failed_stage": "FINAL VIDEO",
   "gemini_retry_not_before": "2026-08-30T12:35:00+05:30"
 }
