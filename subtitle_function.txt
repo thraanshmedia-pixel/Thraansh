@@ -1,0 +1,147 @@
+def create_subtitle_file(
+    article,
+    voice_duration,
+    output_file
+):
+
+    narration = clean_text(
+
+        article.get(
+            "narration_script"
+        )
+
+        or article.get(
+            "hindi_script"
+        )
+
+        or ""
+    )
+
+    if not narration:
+
+        raise RuntimeError(
+            "Hindi narration script "
+            "missing. Cannot create subtitles."
+        )
+
+    chunks = (
+        split_subtitle_text(
+            narration
+        )
+    )
+
+    if not chunks:
+
+        raise RuntimeError(
+            "Subtitle chunks could "
+            "not be created."
+        )
+
+    duration = float(
+        voice_duration
+    )
+
+    weights = [
+
+        max(
+            1,
+            len(
+                re.sub(
+                    r"\s+",
+                    "",
+                    chunk
+                )
+            )
+        )
+
+        for chunk
+        in chunks
+    ]
+
+    total_weight = sum(
+        weights
+    )
+
+    current_time = 0.0
+
+    srt_lines = []
+
+    for index, (
+        chunk,
+        weight
+    ) in enumerate(
+        zip(
+            chunks,
+            weights
+        ),
+        start=1
+    ):
+
+        if index == len(
+            chunks
+        ):
+
+            end_time = (
+                duration
+            )
+
+        else:
+
+            calculated = (
+                duration
+                * weight
+                / total_weight
+            )
+
+            end_time = min(
+                duration,
+                current_time
+                + calculated
+            )
+
+        # Safety.
+
+        if end_time <= current_time:
+
+            end_time = min(
+                duration,
+                current_time
+                + 0.5
+            )
+
+        srt_lines.extend(
+            [
+                str(
+                    index
+                ),
+
+                (
+                    f"{srt_timestamp(current_time)} "
+                    f"--> "
+                    f"{srt_timestamp(end_time)}"
+                ),
+
+                chunk,
+
+                "",
+            ]
+        )
+
+        current_time = (
+            end_time
+        )
+
+    output_file.write_text(
+        "\n".join(
+            srt_lines
+        ),
+        encoding="utf-8"
+    )
+
+    return output_file
+
+
+# ============================================================
+# SUBTITLE FONT
+# ============================================================
+
