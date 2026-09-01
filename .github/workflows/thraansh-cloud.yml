@@ -1,0 +1,70 @@
+﻿name: THRAANSH Cloud Automation
+
+on:
+  workflow_dispatch:
+
+  schedule:
+    # IST 07:00, 09:00, 11:00, 13:00, 15:00, 17:00, 19:00, 21:00
+    # GitHub cron uses UTC
+    - cron: "30 1,3,5,7,9,11,13,15 * * *"
+
+concurrency:
+  group: thraansh-cloud-automation
+  cancel-in-progress: false
+
+jobs:
+  thraansh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    env:
+      PYTHONUTF8: "1"
+      PYTHONIOENCODING: "utf-8"
+      TZ: Asia/Kolkata
+
+    steps:
+      - name: Checkout THRAANSH
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg fonts-dejavu-core fonts-liberation
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Install Playwright Chromium
+        run: |
+          python -m playwright install --with-deps chromium
+
+      - name: Verify environment
+        run: |
+          python --version
+          ffmpeg -version | head -n 1
+          ffprobe -version | head -n 1
+
+      - name: Run THRAANSH worker
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+          PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SUPABASE_STORAGE_BUCKET: ${{ secrets.SUPABASE_STORAGE_BUCKET }}
+          FACEBOOK_PAGE_ACCESS_TOKEN: ${{ secrets.FACEBOOK_PAGE_ACCESS_TOKEN }}
+          FACEBOOK_PAGE_ID: ${{ secrets.FACEBOOK_PAGE_ID }}
+          INSTAGRAM_ACCESS_TOKEN: ${{ secrets.INSTAGRAM_ACCESS_TOKEN }}
+          INSTAGRAM_ACCOUNT_ID: ${{ secrets.INSTAGRAM_ACCOUNT_ID }}
+        run: |
+          python run_pipeline/run_pipeline.py --worker
+

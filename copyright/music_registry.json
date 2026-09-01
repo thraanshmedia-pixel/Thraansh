@@ -1,0 +1,11 @@
+{
+  "approved_music": [
+    {
+      "filename": "background_music.mp3",
+      "approved": true,
+      "usage": "background_instrumental",
+      "attribution_required": false,
+      "notes": "Approved THRAANSH background instrumental. Keep documentary evidence of the source/license with the project."
+    }
+  ]
+}
