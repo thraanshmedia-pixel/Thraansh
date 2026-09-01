@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import json
 import re
@@ -10,6 +10,8 @@ from pathlib import Path
 
 import imageio_ffmpeg
 from PIL import Image
+from indic_transliteration import sanscript
+from indic_transliteration.sanscript import transliterate
 
 
 # ============================================================
@@ -1337,7 +1339,7 @@ def split_subtitle_text(text):
         part.strip()
 
         for part in re.split(
-            r"(?<=[।!?])\s+",
+            r"(?<=[à¥¤!?])\s+",
             text
         )
 
@@ -1393,6 +1395,402 @@ def split_subtitle_text(text):
 # ============================================================
 # CREATE SRT
 # ============================================================
+
+
+# ============================================================
+# NATURAL ROMAN HINDI SUBTITLES
+# ============================================================
+
+def romanize_hindi(text):
+
+    text = clean_text(text)
+
+    if not text:
+        return ""
+
+    # --------------------------------------------------------
+    # COMMON NATURAL ROMAN-HINDI PHRASES
+    # --------------------------------------------------------
+
+    phrase_map = {
+
+        "आप कैसे हो": "Aap kaise ho",
+        "क्या करते हो": "Kya karte ho",
+
+        "आज की बड़ी खबर": "Aaj ki badi khabar",
+
+        "सामने आ रही है":
+            "saamne aa rahi hai",
+
+        "सामने आ रहा है":
+            "saamne aa raha hai",
+
+        "सामने आया है":
+            "saamne aaya hai",
+
+        "सामने आई है":
+            "saamne aayi hai",
+
+        "नई दिल्ली":
+            "New Delhi",
+
+        "सुप्रीम कोर्ट":
+            "Supreme Court",
+
+        "प्रधानमंत्री":
+            "Pradhan Mantri",
+
+        "मुख्यमंत्री":
+            "Mukhya Mantri",
+
+        "केंद्रीय सरकार":
+            "Kendra Sarkar",
+
+        "भारत सरकार":
+            "Bharat Sarkar",
+    }
+
+    result = text
+
+    # Replace longer phrases first.
+
+    for hindi in sorted(
+        phrase_map.keys(),
+        key=len,
+        reverse=True
+    ):
+
+        result = result.replace(
+            hindi,
+            phrase_map[hindi]
+        )
+
+    # --------------------------------------------------------
+    # NATURAL WORD DICTIONARY
+    # --------------------------------------------------------
+
+    word_map = {
+
+        "आप": "aap",
+        "हम": "hum",
+        "मैं": "main",
+        "वह": "woh",
+        "वे": "woh",
+        "यह": "yeh",
+        "ये": "yeh",
+
+        "क्या": "kya",
+        "क्यों": "kyun",
+        "कैसे": "kaise",
+        "कौन": "kaun",
+        "कब": "kab",
+        "कहां": "kahan",
+        "कहाँ": "kahan",
+
+        "आज": "aaj",
+        "कल": "kal",
+        "अब": "ab",
+        "फिर": "phir",
+        "पहले": "pehle",
+        "बाद": "baad",
+
+        "की": "ki",
+        "का": "ka",
+        "के": "ke",
+
+        "को": "ko",
+        "से": "se",
+        "में": "mein",
+        "पर": "par",
+        "तक": "tak",
+
+        "और": "aur",
+        "लेकिन": "lekin",
+        "अगर": "agar",
+        "तो": "to",
+
+        "एक": "ek",
+        "इस": "is",
+        "उस": "us",
+
+        "है": "hai",
+        "हैं": "hain",
+        "था": "tha",
+        "थी": "thi",
+        "थे": "the",
+
+        "नहीं": "nahi",
+
+        "कर": "kar",
+        "करता": "karta",
+        "करती": "karti",
+        "करते": "karte",
+        "करना": "karna",
+        "किया": "kiya",
+
+        "हुआ": "hua",
+        "हुई": "hui",
+        "हुए": "hue",
+
+        "गया": "gaya",
+        "गई": "gayi",
+        "गए": "gaye",
+
+        "रहा": "raha",
+        "रही": "rahi",
+        "रहे": "rahe",
+
+        "आ": "aa",
+        "आया": "aaya",
+        "आई": "aayi",
+
+        "लिए": "liye",
+        "ने": "ne",
+        "साथ": "saath",
+
+        "बड़ी": "badi",
+        "बड़ा": "bada",
+
+        "खबर": "khabar",
+        "मामला": "maamla",
+        "मामले": "maamle",
+
+        "जानकारी": "jaankari",
+
+        "फैसला": "faisla",
+
+        "सरकार": "sarkar",
+
+        "अधिकारी": "adhikari",
+        "अधिकारियों": "adhikariyon",
+
+        "अदालत": "adalat",
+
+        "भारत": "Bharat",
+        "भारतीय": "Bharatiya",
+
+        "दिल्ली": "Delhi",
+        "मुंबई": "Mumbai",
+        "बेंगलुरु": "Bengaluru",
+        "बैंगलोर": "Bengaluru",
+        "चेन्नई": "Chennai",
+        "कोलकाता": "Kolkata",
+        "हैदराबाद": "Hyderabad",
+
+        "पुलिस": "police",
+
+        "वीडियो": "video",
+
+        "फेसबुक": "Facebook",
+        "इंस्टाग्राम": "Instagram",
+        "यूट्यूब": "YouTube",
+    }
+
+    # --------------------------------------------------------
+    # REPLACE DEVANAGARI WORDS
+    # --------------------------------------------------------
+
+    for hindi in sorted(
+        word_map.keys(),
+        key=len,
+        reverse=True
+    ):
+
+        result = result.replace(
+            hindi,
+            word_map[hindi]
+        )
+
+    # --------------------------------------------------------
+    # FALLBACK FOR ANY HINDI STILL LEFT
+    # --------------------------------------------------------
+
+    if re.search(
+        r"[\u0900-\u097F]",
+        result
+    ):
+
+        result = transliterate(
+            result,
+            sanscript.DEVANAGARI,
+            sanscript.ITRANS
+        )
+
+        fallback_fixes = [
+            (".Dh", "dh"),
+            (".D", "d"),
+            (".Th", "th"),
+            (".T", "t"),
+            ("~N", "n"),
+            ("~n", "n"),
+            (".n", "n"),
+            (".m", "n"),
+            ("M", "n"),
+            ("H", "h"),
+            ("|", "."),
+        ]
+
+        for old, new in fallback_fixes:
+
+            result = result.replace(
+                old,
+                new
+            )
+
+        # Naturalize common ITRANS output.
+
+        natural_fixes = {
+
+            "Aapa": "Aap",
+            "aapa": "aap",
+
+            "kyaa": "kya",
+            "Kyaa": "Kya",
+
+            "karate": "karte",
+            "karatee": "karti",
+
+            "aaja": "aaj",
+            "Aaja": "Aaj",
+
+            "kee": "ki",
+
+            "baDee": "badi",
+            "ba.Dee": "badi",
+
+            "khabara": "khabar",
+
+            "dillee": "Delhi",
+            "dillii": "Delhi",
+            "delhii": "Delhi",
+
+            "saamane": "saamne",
+
+            "rahee": "rahi",
+            "rahaa": "raha",
+
+            "sarakaar": "sarkar",
+            "sarakaara": "sarkar",
+
+            "bhaarata": "Bharat",
+
+            "mumbaee": "Mumbai",
+
+            "chennaee": "Chennai",
+
+            "kolakaataa": "Kolkata",
+
+            "haidarabaada": "Hyderabad",
+        }
+
+        words = result.split()
+
+        final_words = []
+
+        for word in words:
+
+            punctuation_before = ""
+            punctuation_after = ""
+
+            core = word
+
+            while (
+                core
+                and core[0]
+                in '"''([{'
+            ):
+
+                punctuation_before += core[0]
+                core = core[1:]
+
+            while (
+                core
+                and core[-1]
+                in '.,!?;:)]}"'''
+            ):
+
+                punctuation_after = (
+                    core[-1]
+                    + punctuation_after
+                )
+
+                core = core[:-1]
+
+            fixed = natural_fixes.get(
+                core,
+                natural_fixes.get(
+                    core.lower(),
+                    core
+                )
+            )
+
+            final_words.append(
+                punctuation_before
+                + fixed
+                + punctuation_after
+            )
+
+        result = " ".join(
+            final_words
+        )
+
+    # --------------------------------------------------------
+    # FINAL EXACT NATURAL CORRECTIONS
+    # --------------------------------------------------------
+
+    corrections = {
+
+        "Aap kaise ho? kya karte ho?":
+            "Aap kaise ho? Kya karte ho?",
+
+        "aap kaise ho?":
+            "Aap kaise ho?",
+
+        "aaj ki badi khabar":
+            "Aaj ki badi khabar",
+
+        "Delhi se saamne aa rahi hai":
+            "Delhi se saamne aa rahi hai",
+
+        "dillee": "Delhi",
+        "Dillee": "Delhi",
+
+        "Aapa": "Aap",
+
+        "kyaa": "kya",
+
+        "karate": "karte",
+    }
+
+    for old, new in corrections.items():
+
+        result = result.replace(
+            old,
+            new
+        )
+
+    result = result.replace(
+        "|",
+        "."
+    )
+
+    result = re.sub(
+        r"\s+",
+        " ",
+        result
+    ).strip()
+
+    # Capitalize sentence starts.
+
+    result = re.sub(
+        r"(^|[.!?]\s+)([a-z])",
+        lambda match:
+            match.group(1)
+            + match.group(2).upper(),
+        result
+    )
+
+    return result
 
 def create_subtitle_file(
     article,
@@ -1573,7 +1971,7 @@ def subtitle_font():
     # installed with fonts-noto-core.
 
     return (
-        "Noto Sans Devanagari"
+        "Noto Sans"
     )
 
 
@@ -1673,7 +2071,7 @@ def render_final(
         )
 
         print(
-            "Hindi subtitles: ON"
+            "Roman Hindi subtitles: ON"
         )
 
         audio_filter = (
@@ -1787,7 +2185,7 @@ def render_final(
     )
 
     print(
-        "Hindi subtitles: ON"
+        "Roman Hindi subtitles: ON"
     )
 
     run_ffmpeg(
@@ -1929,7 +2327,7 @@ def main():
     print()
 
     print(
-        "Hindi subtitles: ENABLED"
+        "Roman Hindi subtitles: ENABLED"
     )
 
     print(
@@ -2096,7 +2494,7 @@ def main():
                 safe_filename(
                     title
                 )
-                + "_Hindi_Subtitles.srt"
+                + "_Roman_Hindi_Subtitles.srt"
             )
         )
 
@@ -2323,21 +2721,21 @@ def main():
         print()
 
         print(
-            "Story footage ✓"
+            "Story footage âœ“"
         )
 
         print(
-            "Hindi narration ✓"
+            "Hindi narration âœ“"
         )
 
         print(
-            "Hindi burned-in subtitles ✓"
+            "Roman Hindi burned-in subtitles âœ“"
         )
 
         if music_used:
 
             print(
-                "Background music ✓"
+                "Background music âœ“"
             )
 
         else:
