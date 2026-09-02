@@ -1,14 +1,14 @@
 {
-  "prepared_slot": "2026-09-02T04:46",
+  "prepared_slot": "2026-09-02T07:01",
   "prepare_status": "READY",
-  "prepared_title": "MP’s Chitrakoot Floods: CM Mohan Yadav Visits Affected Areas, Promises Compensation For Losses",
-  "prepared_video": "/home/runner/work/Thraansh/Thraansh/final_videos/MP’s_Chitrakoot_Floods__CM_Mohan_Yadav_Visits_Affected_Areas,_Promises_Compensation_For_Lo_THRAANSH_FINAL.mp4",
-  "prepared_at_ist": "2026-09-02T04:47:45.391520+05:30",
-  "updated_at_ist": "2026-09-02T04:50:34.813246+05:30",
+  "prepared_title": "Nepal flood death toll crosses 1,000, nearly 4,000 remain out of contact",
+  "prepared_video": "/home/runner/work/Thraansh/Thraansh/final_videos/Nepal_flood_death_toll_crosses_1,000,_nearly_4,000_remain_out_of_contact_THRAANSH_FINAL.mp4",
+  "prepared_at_ist": "2026-09-02T07:04:14.714655+05:30",
+  "updated_at_ist": "2026-09-02T07:06:52.988705+05:30",
   "completion_status": "COMPLETE",
   "active_slot": "",
-  "completed_slot": "2026-09-02T04:46",
-  "completed_at_ist": "2026-09-02T04:50:34.813223+05:30",
+  "completed_slot": "2026-09-02T07:01",
+  "completed_at_ist": "2026-09-02T07:06:52.988685+05:30",
   "failed_stage": "FINAL VIDEO",
   "gemini_retry_not_before": "2026-09-02T12:35:00+05:30"
 }
