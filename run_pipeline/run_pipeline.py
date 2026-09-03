@@ -1,4 +1,4 @@
-"""
+﻿"""
 THRAANSH PERMANENT AUTOMATION WORKER V8.0 - SELF-HEALING 3-PLATFORM WORKER
 
 Run this from Windows Task Scheduler every 5 minutes.
@@ -441,60 +441,176 @@ def save_state(s: dict) -> None:
     atomic_json(STATE_FILE, s)
 
 def prepare_for(slot_time: datetime) -> bool:
+    """
+    Build and validate one complete THRAANSH production package.
+
+    A slot is READY only when the complete content pipeline has succeeded
+    and the final video exists on disk.
+
+    FAILED / QUOTA_WAIT / RIGHTS_BLOCKED states are never considered
+    prepared merely because prepared_slot matches.
+    """
     key = slot_key(slot_time)
     state = load_state()
-    if state.get("prepared_slot") == key:
-        ok,msg = rights_gate()
-        if ok:
-            log(f"{key}: already prepared; {msg}")
+
+    # ========================================================
+    # VALIDATE EXISTING READY PACKAGE
+    # ========================================================
+
+    same_slot = state.get("prepared_slot") == key
+    prepare_status = str(
+        state.get("prepare_status") or ""
+    ).strip().upper()
+
+    if same_slot and prepare_status == "READY":
+
+        a = current_article()
+
+        prepared_title = str(
+            state.get("prepared_title") or ""
+        ).strip()
+
+        current_title = str(
+            a.get("title") or ""
+        ).strip()
+
+        video_value = (
+            a.get("final_video_file")
+            or state.get("prepared_video")
+            or ""
+        )
+
+        video_path = Path(str(video_value)) if video_value else None
+
+        video_exists = bool(
+            video_path
+            and video_path.is_file()
+            and video_path.stat().st_size > 10000
+        )
+
+        title_matches = bool(
+            prepared_title
+            and current_title
+            and prepared_title == current_title
+        )
+
+        ok, msg = rights_gate()
+
+        if (
+            ok
+            and title_matches
+            and video_exists
+        ):
+            log(
+                f"{key}: existing READY package VERIFIED; "
+                f"{msg}; video={video_path}"
+            )
             return True
-        log(f"{key}: prior prepared state invalid; rebuilding.")
+
+        log(
+            f"{key}: stale READY state detected. "
+            f"title_matches={title_matches}, "
+            f"video_exists={video_exists}, "
+            f"rights_ok={ok}. Rebuilding."
+        )
+
+        state.update({
+            "prepare_status": "REBUILD_REQUIRED",
+            "failed_stage": "READY PACKAGE VALIDATION",
+        })
+
+        save_state(state)
+
+    elif same_slot:
+
+        log(
+            f"{key}: previous preparation state is "
+            f"{prepare_status or 'UNKNOWN'}; "
+            "it is NOT READY and will be rebuilt/resumed."
+        )
+
+    # ========================================================
+    # START / RESUME COMPLETE CONTENT PIPELINE
+    # ========================================================
 
     log(f"PREPARING story for slot {key}")
+
+    state.update({
+        "prepared_slot": key,
+        "prepare_status": "PREPARING",
+        "failed_stage": "",
+    })
+
+    save_state(state)
+
     for name, script in CONTENT_STAGES:
-        # V7.3 FREE-TIER RULE:
-        # The presenter writes HINDI_SCRIPT_QUOTA_WAIT +
-        # gemini_retry_not_before after a Gemini quota error.
-        # Do not invoke Gemini again every five minutes while that cooldown
-        # is active. Other content stages retain the existing retry policy.
+
+        # ====================================================
+        # GEMINI FREE-TIER COOLDOWN
+        # ====================================================
+
         if name == "HINDI SCRIPT":
+
             waiting, retry_at = gemini_quota_wait()
+
             if waiting:
+
                 state.update({
                     "prepared_slot": key,
                     "prepare_status": "GEMINI_QUOTA_WAIT",
                     "failed_stage": "HINDI SCRIPT",
                     "gemini_retry_not_before": retry_at,
                 })
+
                 save_state(state)
+
                 log(
-                    f"HINDI SCRIPT: Gemini free-tier quota cooldown active; "
-                    f"no API call made. Retry not before {retry_at}."
+                    "HINDI SCRIPT: Gemini free-tier quota "
+                    "cooldown active; no API call made. "
+                    f"Retry not before {retry_at}."
                 )
+
                 return False
 
-            ok = run_once(name, script)
+            ok = run_once(
+                name,
+                script
+            )
+
         else:
-            ok = run_with_retry(name, script)
+
+            ok = run_with_retry(
+                name,
+                script
+            )
+
+        # ====================================================
+        # STAGE FAILURE
+        # ====================================================
 
         if not ok:
-            # Re-read the queue because the presenter may just have written
-            # a new quota cooldown during this invocation.
+
             if name == "HINDI SCRIPT":
+
                 waiting, retry_at = gemini_quota_wait()
+
                 if waiting:
+
                     state.update({
                         "prepared_slot": key,
                         "prepare_status": "GEMINI_QUOTA_WAIT",
                         "failed_stage": "HINDI SCRIPT",
                         "gemini_retry_not_before": retry_at,
                     })
+
                     save_state(state)
+
                     log(
-                        f"PREPARATION PAUSED at HINDI SCRIPT: Gemini free-tier "
-                        f"quota cooldown until {retry_at}. "
-                        f"Next 5-minute workers will not call Gemini before then."
+                        "PREPARATION PAUSED at HINDI SCRIPT: "
+                        "Gemini free-tier quota cooldown until "
+                        f"{retry_at}."
                     )
+
                     return False
 
             state.update({
@@ -502,30 +618,115 @@ def prepare_for(slot_time: datetime) -> bool:
                 "prepare_status": "FAILED",
                 "failed_stage": name,
             })
+
             save_state(state)
+
             log(
                 f"PREPARATION FAILED at {name}; "
-                f"next worker invocation will recover."
+                "publication is BLOCKED until preparation "
+                "successfully completes."
             )
+
             return False
 
-    ok,msg = rights_gate()
-    if not ok:
-        state.update({"prepared_slot": key, "prepare_status":"RIGHTS_BLOCKED", "failed_stage":"RIGHTS GATE"})
-        save_state(state)
-        log(f"PREPARATION BLOCKED: {msg}")
-        return False
+    # ========================================================
+    # COMPLETE PACKAGE VALIDATION
+    # ========================================================
 
     a = current_article()
+
+    final_video_value = str(
+        a.get("final_video_file") or ""
+    ).strip()
+
+    if not final_video_value:
+
+        state.update({
+            "prepared_slot": key,
+            "prepare_status": "FAILED",
+            "failed_stage": "FINAL VIDEO VALIDATION",
+        })
+
+        save_state(state)
+
+        log(
+            "PREPARATION FAILED: final_video_file "
+            "is missing from article state."
+        )
+
+        return False
+
+    final_video = Path(final_video_value)
+
+    if (
+        not final_video.is_file()
+        or final_video.stat().st_size <= 10000
+    ):
+
+        state.update({
+            "prepared_slot": key,
+            "prepare_status": "FAILED",
+            "failed_stage": "FINAL VIDEO VALIDATION",
+        })
+
+        save_state(state)
+
+        log(
+            "PREPARATION FAILED: final video does not "
+            f"exist or is invalid: {final_video}"
+        )
+
+        return False
+
+    # ========================================================
+    # RIGHTS GATE
+    # ========================================================
+
+    ok, msg = rights_gate()
+
+    if not ok:
+
+        state.update({
+            "prepared_slot": key,
+            "prepare_status": "RIGHTS_BLOCKED",
+            "failed_stage": "RIGHTS GATE",
+        })
+
+        save_state(state)
+
+        log(
+            f"PREPARATION BLOCKED: {msg}"
+        )
+
+        return False
+
+    # ========================================================
+    # ONLY NOW IS THE SLOT READY
+    # ========================================================
+
+    a = current_article()
+
     state.update({
         "prepared_slot": key,
-        "prepare_status":"READY",
-        "prepared_title": str(a.get("title") or ""),
-        "prepared_video": str(a.get("final_video_file") or ""),
+        "prepare_status": "READY",
+        "failed_stage": "",
+        "prepared_title": str(
+            a.get("title") or ""
+        ),
+        "prepared_video": str(
+            a.get("final_video_file") or ""
+        ),
         "prepared_at_ist": datetime.now(IST).isoformat(),
     })
+
     save_state(state)
-    log(f"READY for {key}: {a.get('title')}")
+
+    log(
+        f"READY for {key}: "
+        f"{a.get('title')} | "
+        f"video={a.get('final_video_file')}"
+    )
+
     return True
 
 def platform_retry(name: str, script: Path, verifier) -> bool:
@@ -729,3 +930,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
