@@ -1,4 +1,4 @@
-import asyncio
+﻿import asyncio
 import json
 import re
 from datetime import datetime
@@ -354,7 +354,7 @@ def main():
     )
 
     print(
-        "INDIA + INTERNATIONAL ✓"
+        "INDIA + INTERNATIONAL âœ“"
     )
 
     print()
@@ -364,11 +364,11 @@ def main():
     )
 
     print(
-        "Language: Easy Hindi ✓"
+        "Language: Easy Hindi âœ“"
     )
 
     print(
-        "Country restriction: NONE ✓"
+        "Country restriction: NONE âœ“"
     )
 
     # ========================================================
@@ -592,19 +592,19 @@ def main():
 
         print()
         print(
-            "Easy Hindi ✓"
+            "Easy Hindi âœ“"
         )
 
         print(
-            "India news supported ✓"
+            "India news supported âœ“"
         )
 
         print(
-            "International news supported ✓"
+            "International news supported âœ“"
         )
 
         print(
-            "Original story country preserved ✓"
+            "Original story country preserved âœ“"
         )
 
         print()
