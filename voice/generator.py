@@ -1,4 +1,4 @@
-﻿import asyncio
+import asyncio
 import json
 import re
 from datetime import datetime
@@ -681,6 +681,11 @@ def main():
         print(
             error
         )
+
+        # Propagate TTS failure to the orchestration layer.
+        # This prevents scene/video generation from continuing
+        # when no valid narration MP3 exists.
+        raise
 
 
 # ============================================================
