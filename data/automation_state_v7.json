@@ -1,14 +1,14 @@
 {
-  "prepared_slot": "2026-09-04T07:05",
-  "prepare_status": "FAILED",
-  "prepared_title": "Rohit Chandel POCSO Case Update: ‘Married’, ‘Businessman’ & Other Errors In Documents Leave Sairaab Actor Facing Major Setback",
-  "prepared_video": "/home/runner/work/Thraansh/Thraansh/final_videos/Rohit_Chandel_POCSO_Case_Update__‘Married’,_‘Businessman’_&_Other_Errors_In_Documents_Leav_THRAANSH_FINAL.mp4",
-  "prepared_at_ist": "2026-09-02T15:05:11.208397+05:30",
-  "updated_at_ist": "2026-09-04T07:07:53.567795+05:30",
+  "prepared_slot": "2026-09-04T09:07",
+  "prepare_status": "READY",
+  "prepared_title": "‘Leave granted’ became ‘Chutti swikriti’: Justice KV Viswanathan highlights promise and risks of AI in law",
+  "prepared_video": "/home/runner/work/Thraansh/Thraansh/final_videos/‘Leave_granted’_became_‘Chutti_swikriti’__Justice_KV_Viswanathan_highlights_promise_and_ri_THRAANSH_FINAL.mp4",
+  "prepared_at_ist": "2026-09-04T09:11:01.852826+05:30",
+  "updated_at_ist": "2026-09-04T09:13:52.798362+05:30",
   "completion_status": "COMPLETE",
   "active_slot": "",
-  "completed_slot": "2026-09-02T15:03",
-  "completed_at_ist": "2026-09-02T15:06:36.760268+05:30",
-  "failed_stage": "FINAL VIDEO",
+  "completed_slot": "2026-09-04T09:07",
+  "completed_at_ist": "2026-09-04T09:13:52.798348+05:30",
+  "failed_stage": "",
   "gemini_retry_not_before": "2026-09-02T12:35:00+05:30"
 }
