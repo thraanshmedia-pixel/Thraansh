@@ -1984,53 +1984,104 @@ def subtitle_font():
 def subtitle_filter(
     subtitle_file
 ):
+    """
+    Build a crash-resistant FFmpeg subtitles filter.
 
-    path = (
+    IMPORTANT:
+    Story titles may contain apostrophes, commas, colons,
+    Unicode punctuation and other characters that are unsafe
+    inside FFmpeg filter expressions.
+
+    Therefore the original SRT filename is NEVER passed to
+    FFmpeg.  It is copied to one fixed ASCII-only temporary
+    filename first.
+
+    force_style is intentionally not embedded here because
+    complex ASS style strings add another FFmpeg parsing layer.
+    Stability of unattended cloud rendering takes priority.
+    """
+
+    source = Path(
         subtitle_file
+    )
+
+    if not source.is_file():
+        raise RuntimeError(
+            "Subtitle file does not exist: "
+            f"{source}"
+        )
+
+    if source.stat().st_size <= 0:
+        raise RuntimeError(
+            "Subtitle file is empty: "
+            f"{source}"
+        )
+
+    TEMP_FOLDER.mkdir(
+        parents=True,
+        exist_ok=True
+    )
+
+    # Fixed safe filename.
+    # No headline/title characters reach FFmpeg.
+    safe_subtitle = (
+        TEMP_FOLDER
+        / "thraansh_render_subtitles.srt"
+    )
+
+    safe_subtitle.write_bytes(
+        source.read_bytes()
+    )
+
+    if (
+        not safe_subtitle.is_file()
+        or safe_subtitle.stat().st_size <= 0
+    ):
+        raise RuntimeError(
+            "Could not create safe subtitle copy."
+        )
+
+    ffmpeg_path = (
+        safe_subtitle
         .resolve()
         .as_posix()
     )
 
-    # Required by FFmpeg on Windows:
-    # C:/... becomes C\:/...
-
-    path = (
-        path
-        .replace(
-            ":",
-            r"\:"
-        )
-        .replace(
-            "'",
-            r"\'"
-        )
+    # Windows drive letter:
+    # C:/folder/file.srt -> C\:/folder/file.srt
+    ffmpeg_path = ffmpeg_path.replace(
+        ":",
+        r"\:"
     )
 
-    font = (
-        subtitle_font()
+    # Defensive escaping.
+    ffmpeg_path = ffmpeg_path.replace(
+        "'",
+        r"\'"
     )
 
-    style = (
-        f"FontName={font},"
-        "FontSize=25,"
-        "PrimaryColour=&H00FFFFFF,"
-        "OutlineColour=&H00000000,"
-        "BackColour=&H78000000,"
-        "Bold=1,"
-        "BorderStyle=1,"
-        "Outline=2,"
-        "Shadow=1,"
-        "Alignment=2,"
-        "MarginL=65,"
-        "MarginR=65,"
-        "MarginV=35"
-    )
-
-    return (
+    video_filter = (
         "subtitles="
-        f"filename='{path}':"
-        f"force_style='{style}'"
+        f"filename='{ffmpeg_path}'"
     )
+
+    print()
+    print(
+        "FFmpeg safe subtitle file:"
+    )
+    print(
+        safe_subtitle
+    )
+
+    print(
+        "FFmpeg subtitle filter:"
+    )
+    print(
+        video_filter
+    )
+
+    return video_filter
+
 
 
 # ============================================================
