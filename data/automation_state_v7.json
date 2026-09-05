@@ -1,14 +1,14 @@
 {
-  "prepared_slot": "2026-09-05T13:26",
-  "prepare_status": "READY",
+  "prepared_slot": "2026-09-05T15:05",
+  "prepare_status": "FAILED",
   "prepared_title": "‘Shouldn't it begin with Congress?' BJP targets Rahul over 'smash patriarchy’ remark",
   "prepared_video": "/home/runner/work/Thraansh/Thraansh/final_videos/‘Shouldn't_it_begin_with_Congress_'_BJP_targets_Rahul_over_'smash_patriarchy’_remark_THRAANSH_FINAL.mp4",
   "prepared_at_ist": "2026-09-05T13:26:58.962738+05:30",
-  "updated_at_ist": "2026-09-05T13:27:55.607471+05:30",
+  "updated_at_ist": "2026-09-05T15:07:32.687220+05:30",
   "completion_status": "COMPLETE",
   "active_slot": "",
   "completed_slot": "2026-09-05T13:26",
   "completed_at_ist": "2026-09-05T13:27:55.607453+05:30",
-  "failed_stage": "",
+  "failed_stage": "FINAL VIDEO",
   "gemini_retry_not_before": "2026-09-02T12:35:00+05:30"
 }
