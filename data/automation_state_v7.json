@@ -1,14 +1,14 @@
 {
-  "prepared_slot": "2026-09-05T15:05",
-  "prepare_status": "FAILED",
-  "prepared_title": "‘Shouldn't it begin with Congress?' BJP targets Rahul over 'smash patriarchy’ remark",
-  "prepared_video": "/home/runner/work/Thraansh/Thraansh/final_videos/‘Shouldn't_it_begin_with_Congress_'_BJP_targets_Rahul_over_'smash_patriarchy’_remark_THRAANSH_FINAL.mp4",
-  "prepared_at_ist": "2026-09-05T13:26:58.962738+05:30",
-  "updated_at_ist": "2026-09-05T15:07:32.687220+05:30",
+  "prepared_slot": "2026-09-05T17:04",
+  "prepare_status": "READY",
+  "prepared_title": "Union Budget: Customs duty cuts to facilitate domestic battery, solar cells manufacturing",
+  "prepared_video": "/home/runner/work/Thraansh/Thraansh/final_videos/Union_Budget__Customs_duty_cuts_to_facilitate_domestic_battery,_solar_cells_manufacturing_THRAANSH_FINAL.mp4",
+  "prepared_at_ist": "2026-09-05T17:06:07.039232+05:30",
+  "updated_at_ist": "2026-09-05T17:07:05.824830+05:30",
   "completion_status": "COMPLETE",
   "active_slot": "",
-  "completed_slot": "2026-09-05T13:26",
-  "completed_at_ist": "2026-09-05T13:27:55.607453+05:30",
-  "failed_stage": "FINAL VIDEO",
+  "completed_slot": "2026-09-05T17:04",
+  "completed_at_ist": "2026-09-05T17:07:05.824817+05:30",
+  "failed_stage": "",
   "gemini_retry_not_before": "2026-09-02T12:35:00+05:30"
 }
