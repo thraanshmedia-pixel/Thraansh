@@ -1,14 +1,14 @@
 {
-  "prepared_slot": "2026-09-05T12:14",
-  "prepare_status": "FAILED",
-  "prepared_title": "Jantar Mantar assault row: CJP protests outside Delhi’s Parliament Street police station, seeks action against attack on student’s father",
-  "prepared_video": "/home/runner/work/Thraansh/Thraansh/final_videos/Jantar_Mantar_assault_row__CJP_protests_outside_Delhi’s_Parliament_Street_police_station,__THRAANSH_FINAL.mp4",
-  "prepared_at_ist": "2026-09-04T13:10:41.349450+05:30",
-  "updated_at_ist": "2026-09-05T12:16:40.371483+05:30",
-  "completion_status": "COMPLETE",
-  "active_slot": "",
+  "prepared_slot": "2026-09-05T12:40",
+  "prepare_status": "READY",
+  "prepared_title": "Gandak surge eases; Bihar embankments withstand after Nepal upstream floods",
+  "prepared_video": "/home/runner/work/Thraansh/Thraansh/final_videos/Gandak_surge_eases;_Bihar_embankments_withstand_after_Nepal_upstream_floods_THRAANSH_FINAL.mp4",
+  "prepared_at_ist": "2026-09-05T12:41:49.925607+05:30",
+  "updated_at_ist": "2026-09-05T12:43:13.230884+05:30",
+  "completion_status": "PARTIAL_RETRY_PENDING",
+  "active_slot": "2026-09-05T12:40",
   "completed_slot": "2026-09-04T13:08",
   "completed_at_ist": "2026-09-04T13:12:00.198648+05:30",
-  "failed_stage": "FINAL VIDEO",
+  "failed_stage": "",
   "gemini_retry_not_before": "2026-09-02T12:35:00+05:30"
 }
