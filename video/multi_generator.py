@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import json
 import re
@@ -2352,18 +2352,81 @@ def main():
 
     queue = load_queue()
 
-    article = get_article(
-        queue
-    )
+    # ========================================================
+    # STRICT SAME-ARTICLE SELECTION
+    # ========================================================
+    #
+    # The final renderer MUST use the exact article selected
+    # by production_selector.py.
+    #
+    # No fallback to an old ARTICLE_READY, VOICE_READY,
+    # MULTI_MEDIA_READY or failed article is allowed.
+    # ========================================================
 
-    if article is None:
+    selected_articles = [
+        item
+        for item in queue
+        if (
+            isinstance(item, dict)
+            and item.get("production_selected") is True
+        )
+    ]
 
-        print(
-            "No production article "
-            "waiting for final video."
+    if len(selected_articles) == 0:
+        raise RuntimeError(
+            "FINAL VIDEO BLOCKED: "
+            "no production_selected article exists."
         )
 
-        return
+    if len(selected_articles) > 1:
+        selected_titles = [
+            clean_text(
+                item.get("title")
+                or "UNTITLED"
+            )
+            for item in selected_articles
+        ]
+
+        raise RuntimeError(
+            "FINAL VIDEO BLOCKED: "
+            "multiple production_selected articles exist: "
+            + " | ".join(selected_titles)
+        )
+
+    article = selected_articles[0]
+
+    title = clean_text(
+        article.get("title")
+        or "THRAANSH News"
+    )
+
+    print()
+    print("=" * 72)
+    print("FINAL VIDEO ARTICLE LOCK")
+    print("=" * 72)
+    print("Article:")
+    print(title)
+    print("production_selected: TRUE")
+    print("=" * 72)
+
+    # --------------------------------------------------------
+    # Validate that THIS SAME ARTICLE completed script stage
+    # --------------------------------------------------------
+
+    selected_script = clean_text(
+        article.get("hindi_script")
+        or article.get("narration_script")
+        or article.get("presenter_script")
+        or article.get("script")
+    )
+
+    if not selected_script:
+        raise RuntimeError(
+            "FINAL VIDEO BLOCKED: "
+            "production_selected article has no Hindi script: "
+            + title
+        )
+
 
     title = clean_text(
         article.get(
