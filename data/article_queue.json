@@ -7445,12 +7445,12 @@
     "retry_count": 0,
     "last_error": null,
     "collected_at": "2026-08-27T04:56:01.401555+00:00",
-    "production_selected": false,
+    "production_selected": true,
     "production_scope": "GLOBAL",
     "story_region": "Bihar",
     "production_queue_position": 76,
-    "production_selected_at": "2026-08-28T05:17:45.483397",
-    "updated_at": "2026-08-28T05:18:31.467414+05:30",
+    "production_selected_at": "2026-09-05T12:11:13.357100",
+    "updated_at": "2026-09-05T12:11:13.357418",
     "script_language": "hi",
     "script_style": "easy_hindi",
     "script_provider": "Gemini",
@@ -7501,7 +7501,9 @@
     "rights_blockers": [],
     "rights_warnings": [
       "Sensitive-story terms detected: killing. Generic stock people must not be presented as the actual accused, suspect, victim or subject."
-    ]
+    ],
+    "source_quality_class": "SHORT",
+    "production_source_characters": 138
   },
   {
     "id": null,

@@ -1,353 +1,165 @@
-﻿import json
-import re
+﻿from __future__ import annotations
+
+import json
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 
 # ============================================================
-# THRAANSH PRODUCTION SELECTOR V4
-# IMPORTANT NEWS + STRICT INDIA CRICKET PRIORITY
-# FREE ONLY
+# THRAANSH PRODUCTION SELECTOR V3
+#
+# PERMANENT RULES
+# ------------------------------------------------------------
+# 1. Never clear a current selection before replacement exists.
+# 2. Exactly ONE article may be production_selected.
+# 3. Incomplete production is recovered before a fresh story.
+# 4. Published/uploaded stories are never reused.
+# 5. If nothing usable exists, exit non-zero immediately.
+# 6. Do not silently leave production_selected count at zero.
 # ============================================================
+
 
 PROJECT_FOLDER = Path(__file__).resolve().parents[1]
-QUEUE_FILE = PROJECT_FOLDER / "data" / "article_queue.json"
 
-PROCESSED_STATUSES = {
-    "SCRIPT_READY",
-    "VOICE_READY",
-    "SCENE_PLAN_READY",
-    "SCENE_FOOTAGE_FAILED",
-    "MULTI_MEDIA_READY",
-    "MULTI_VIDEO_FAILED",
-    "VIDEO_READY",
-    "RIGHTS_PASS",
-    "PUBLISHED",
-    "UPLOADED",
-}
+QUEUE_FILE = (
+    PROJECT_FOLDER
+    / "data"
+    / "article_queue.json"
+)
+
 
 FULL_MIN_CHARS = 1200
 MEDIUM_MIN_CHARS = 600
 SHORT_MIN_CHARS = 300
 
-MIN_IMPORTANCE_SCORE = 45
-
 
 # ============================================================
-# KEYWORDS
+# TERMINAL / FINISHED STATES
 # ============================================================
 
-BREAKING_TERMS = {
-    "breaking",
-    "breaking news",
-    "just in",
-    "major",
-    "urgent",
-    "developing",
-}
-
-HIGH_IMPACT_TERMS = {
-    "killed",
-    "dies",
-    "death",
-    "attack",
-    "war",
-    "missile",
-    "explosion",
-    "blast",
-    "earthquake",
-    "flood",
-    "cyclone",
-    "landslide",
-    "crash",
-    "fire",
-    "emergency",
-    "arrested",
-    "convicted",
-    "verdict",
-    "supreme court",
-    "high court",
-    "resigns",
-    "resignation",
-    "ceasefire",
-    "sanctions",
-}
-
-GOVERNMENT_TERMS = {
-    "prime minister",
-    "president",
-    "government",
-    "parliament",
-    "cabinet",
-    "minister",
-    "ministry",
-    "election",
-    "lok sabha",
-    "rajya sabha",
-    "chief minister",
-    "supreme court",
-    "high court",
-    "rbi",
-}
-
-BUSINESS_TERMS = {
-    "merger",
-    "acquisition",
-    "acquires",
-    "ipo",
-    "bankruptcy",
-    "layoffs",
-    "market crash",
-    "interest rate",
-    "repo rate",
-    "inflation",
-    "gdp",
-}
-
-TECH_TERMS = {
-    "artificial intelligence",
-    "openai",
-    "google ai",
-    "microsoft ai",
-    "apple ai",
-    "meta ai",
-    "nvidia",
-    "cyberattack",
-    "cyber attack",
-    "data breach",
-}
-
-MAJOR_SPORTS_TERMS = {
-    "world cup",
-    "final",
-    "semi-final",
-    "semifinal",
-    "champion",
-    "champions",
-    "wins title",
-    "won title",
-    "gold medal",
-    "silver medal",
-    "bronze medal",
-    "world record",
-    "national record",
-    "retirement",
-    "retires",
-    "injured",
-    "injury",
-    "suspended",
-    "banned",
-    "squad announced",
-}
-
-LOW_VALUE_TERMS = {
-    "horoscope",
-    "astrology",
-    "zodiac",
-    "photo gallery",
-    "airport look",
-    "spotted at",
-    "throwback",
-    "old video",
-    "old photo",
-    "internet reacts",
-    "fans react",
+TERMINAL_STATUSES = {
+    "PUBLISHED",
+    "UPLOADED",
+    "YOUTUBE_PUBLISHED",
+    "FACEBOOK_PUBLISHED",
+    "INSTAGRAM_PUBLISHED",
+    "COMPLETE",
+    "COMPLETED",
 }
 
 
 # ============================================================
-# STRICT CRICKET TERMS
+# PIPELINE PROGRESS
+#
+# Higher score = further through production.
+# This lets us recover interrupted work before starting again.
 # ============================================================
 
-STRONG_CRICKET_TERMS = {
-    "cricket",
-    "bcci",
-    "icc",
-    "test cricket",
-    "test match",
-    "odi",
-    "t20i",
-    "ipl",
-    "wicket",
-    "wickets",
-    "innings",
-    "batsman",
-    "batter",
-    "bowler",
-    "bowling",
-    "batting",
-    "cricketer",
-}
+RECOVERY_PRIORITY = {
+    "RIGHTS_PASS": 100,
+    "VIDEO_READY": 95,
+    "MULTI_VIDEO_READY": 90,
+    "MULTI_MEDIA_READY": 85,
+    "SCENE_FOOTAGE_READY": 80,
+    "SCENE_PLAN_READY": 75,
+    "SCENES_READY": 75,
+    "VOICE_READY": 70,
+    "SCRIPT_READY": 60,
 
-INDIA_CRICKET_TERMS = {
-    "bcci",
-    "team india",
-    "india cricket",
-    "indian cricket",
-    "india men's team",
-    "india mens team",
-    "india women's team",
-    "india womens team",
-    "women in blue",
-    "men in blue",
-}
+    # retryable failures
+    "MULTI_VIDEO_FAILED": 55,
+    "SCENE_FOOTAGE_FAILED": 50,
+    "VOICE_FAILED": 45,
+    "HINDI_SCRIPT_FAILED": 40,
+    "HINDI_SCRIPT_QUOTA_WAIT": 35,
 
-INDIAN_CRICKET_PLAYERS = {
-    "virat kohli",
-    "rohit sharma",
-    "shubman gill",
-    "jasprit bumrah",
-    "hardik pandya",
-    "ravindra jadeja",
-    "kl rahul",
-    "rishabh pant",
-    "suryakumar yadav",
-    "mohammed siraj",
-    "kuldeep yadav",
-    "yashasvi jaiswal",
-    "abhishek sharma",
-    "smriti mandhana",
-    "harmanpreet kaur",
-    "jemimah rodrigues",
-    "deepti sharma",
-    "shafali verma",
-    "renuka singh",
-}
-
-CRICKET_IMPORTANT_TERMS = {
-    "squad",
-    "selected",
-    "selection",
-    "dropped",
-    "recalled",
-    "injured",
-    "injury",
-    "ruled out",
-    "replacement",
-    "captain",
-    "captaincy",
-    "coach",
-    "retirement",
-    "retires",
-    "retired",
-    "record",
-    "century",
-    "five-wicket",
-    "hat-trick",
-    "hat trick",
-    "wins",
-    "won",
-    "defeats",
-    "defeated",
-    "final",
-    "semi-final",
-    "semifinal",
-    "world cup",
-    "champions trophy",
-    "asia cup",
-    "test championship",
-    "central contract",
-    "suspended",
-    "banned",
-    "announces",
-    "announced",
+    # fresh-production states
+    "ARTICLE_READY": 30,
+    "READY_FOR_SCRIPT": 25,
+    "PRODUCTION_SELECTED": 20,
+    "SELECTED": 20,
+    "": 10,
 }
 
 
 # ============================================================
-# HELPERS
+# BASIC HELPERS
 # ============================================================
 
-def clean_text(value):
+def clean_text(value: Any) -> str:
     if value is None:
         return ""
 
-    return " ".join(str(value).split()).strip()
+    return " ".join(
+        str(value)
+        .replace("\r", " ")
+        .replace("\n", " ")
+        .split()
+    ).strip()
 
 
-def normalize(value):
-    return clean_text(value).lower()
-
-
-def contains_term(text, term):
-    pattern = (
-        r"(?<![a-z0-9])"
-        + re.escape(term.lower())
-        + r"(?![a-z0-9])"
-    )
-
-    return bool(
-        re.search(
-            pattern,
-            text.lower()
+def load_queue() -> list[dict]:
+    if not QUEUE_FILE.exists():
+        raise RuntimeError(
+            f"Queue file not found: {QUEUE_FILE}"
         )
-    )
 
+    with QUEUE_FILE.open(
+        "r",
+        encoding="utf-8",
+    ) as file:
+        data = json.load(file)
 
-def term_hits(text, terms):
+    if not isinstance(data, list):
+        raise RuntimeError(
+            "article_queue.json must contain a list."
+        )
+
     return [
-        term
-        for term in terms
-        if contains_term(text, term)
+        item
+        for item in data
+        if isinstance(item, dict)
     ]
 
 
-# ============================================================
-# QUEUE
-# ============================================================
+def save_queue(queue: list[dict]) -> None:
+    QUEUE_FILE.parent.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
 
-def load_queue():
-
-    if not QUEUE_FILE.exists():
-        print("ERROR: article_queue.json not found.")
-        return []
-
-    try:
-        with QUEUE_FILE.open(
-            "r",
-            encoding="utf-8"
-        ) as file:
-            data = json.load(file)
-
-        if isinstance(data, list):
-            return data
-
-    except Exception as error:
-        print("ERROR:", error)
-
-    return []
-
-
-def save_queue(queue):
-
-    temp = QUEUE_FILE.with_suffix(
+    temp_file = QUEUE_FILE.with_suffix(
         ".json.tmp"
     )
 
-    with temp.open(
+    with temp_file.open(
         "w",
-        encoding="utf-8"
+        encoding="utf-8",
     ) as file:
         json.dump(
             queue,
             file,
             ensure_ascii=False,
-            indent=2
+            indent=2,
         )
 
-    temp.replace(QUEUE_FILE)
+    temp_file.replace(
+        QUEUE_FILE
+    )
 
 
 # ============================================================
-# ARTICLE TEXT
+# SOURCE TEXT
 # ============================================================
 
-def get_body(article):
-
+def get_body(article: dict) -> str:
     fields = [
         "source_text",
         "article_text",
+        "full_text",
         "content",
+        "body",
         "description",
         "teaser",
         "summary",
@@ -357,7 +169,6 @@ def get_body(article):
     best = ""
 
     for field in fields:
-
         value = clean_text(
             article.get(field)
         )
@@ -368,442 +179,284 @@ def get_body(article):
     return best
 
 
-def title_text(article):
-    return normalize(
-        article.get("title")
+def classify_source(
+    article: dict,
+) -> tuple[str, int]:
+
+    body = get_body(
+        article
     )
 
+    char_count = len(
+        body
+    )
 
-def category_text(article):
-
-    values = [
-        article.get("category"),
-        article.get("category_slug"),
-        article.get("subcategory"),
-    ]
-
-    return normalize(
-        " ".join(
-            clean_text(v)
-            for v in values
-            if v
+    source_status = clean_text(
+        article.get(
+            "source_fetch_status"
         )
-    )
-
-
-def summary_text(article):
-
-    values = [
-        article.get("title"),
-        article.get("description"),
-        article.get("teaser"),
-        article.get("summary"),
-        article.get("excerpt"),
-    ]
-
-    return normalize(
-        " ".join(
-            clean_text(v)
-            for v in values
-            if v
-        )
-    )
-
-
-# ============================================================
-# SOURCE QUALITY
-# ============================================================
-
-def classify_source(article):
-
-    body = get_body(article)
-    char_count = len(body)
-
-    status = clean_text(
-        article.get("source_fetch_status")
     ).upper()
 
-    long_ready = bool(
-        article.get("long_form_source_ready")
+    long_form_ready = bool(
+        article.get(
+            "long_form_source_ready"
+        )
     )
 
+    # Explicit full-source metadata is trusted.
     if (
         char_count >= FULL_MIN_CHARS
-        or long_ready
-        or status == "FULL_SOURCE_READY"
+        or long_form_ready
+        or source_status == "FULL_SOURCE_READY"
     ):
-        return "FULL", char_count
+        return (
+            "FULL",
+            char_count,
+        )
 
     if char_count >= MEDIUM_MIN_CHARS:
-        return "MEDIUM", char_count
+        return (
+            "MEDIUM",
+            char_count,
+        )
 
     if char_count >= SHORT_MIN_CHARS:
-        return "SHORT", char_count
+        return (
+            "SHORT",
+            char_count,
+        )
 
-    return "SKIP", char_count
+    return (
+        "SKIP",
+        char_count,
+    )
 
 
 # ============================================================
-# PROCESSED
+# PUBLICATION / FINISHED CHECK
 # ============================================================
 
-def already_processed(article):
+def is_finished(
+    article: dict,
+) -> bool:
 
     status = clean_text(
         article.get("status")
     ).upper()
 
-    if status in PROCESSED_STATUSES:
+    if status in TERMINAL_STATUSES:
         return True
 
-    output_fields = [
-        "hindi_script",
-        "narration_script",
-        "voice_file",
-        "audio_file",
-        "final_video_file",
+    publication_fields = [
         "youtube_video_id",
+        "youtube_url",
         "facebook_video_id",
+        "facebook_post_id",
         "instagram_media_id",
+        "instagram_post_id",
     ]
 
-    return any(
-        clean_text(article.get(field))
-        for field in output_fields
-    )
+    for field in publication_fields:
+        if clean_text(
+            article.get(field)
+        ):
+            return True
 
-
-def clear_old_selections(queue):
-
-    count = 0
-
-    for article in queue:
-
-        if article.get("production_selected"):
-
-            article["production_selected"] = False
-            count += 1
-
-    return count
+    return False
 
 
 # ============================================================
-# STRICT CRICKET CLASSIFIER
+# CURRENT SELECTED ARTICLE
 # ============================================================
 
-def cricket_analysis(article):
+def current_selected_articles(
+    queue: list[dict],
+) -> list[dict]:
 
-    title = title_text(article)
-    category = category_text(article)
-    summary = summary_text(article)
-
-    # --------------------------------------------------------
-    # Cricket must be established from title/category first.
-    # We deliberately DO NOT scan the entire scraped webpage.
-    # --------------------------------------------------------
-
-    title_cricket = term_hits(
-        title,
-        STRONG_CRICKET_TERMS
-    )
-
-    category_cricket = (
-        "cricket" in category
-    )
-
-    title_players = term_hits(
-        title,
-        INDIAN_CRICKET_PLAYERS
-    )
-
-    summary_cricket = term_hits(
-        summary,
-        STRONG_CRICKET_TERMS
-    )
-
-    # A known Indian cricketer in the headline counts as
-    # cricket evidence even if "cricket" isn't literally there.
-
-    is_cricket = bool(
-        title_cricket
-        or category_cricket
-        or title_players
-        or (
-            summary_cricket
-            and (
-                "sports" in category
-                or "cricket" in category
-            )
-        )
-    )
-
-    if not is_cricket:
-
-        return {
-            "is_cricket": False,
-            "india_related": False,
-            "important_update": False,
-            "important_hits": [],
-        }
-
-    india_hits = term_hits(
-        summary,
-        INDIA_CRICKET_TERMS
-    )
-
-    player_hits = term_hits(
-        summary,
-        INDIAN_CRICKET_PLAYERS
-    )
-
-    india_related = bool(
-        india_hits
-        or player_hits
-    )
-
-    important_hits = term_hits(
-        summary,
-        CRICKET_IMPORTANT_TERMS
-    )
-
-    important_update = bool(
-        is_cricket
-        and india_related
-        and important_hits
-    )
-
-    return {
-        "is_cricket":
-            is_cricket,
-
-        "india_related":
-            india_related,
-
-        "important_update":
-            important_update,
-
-        "important_hits":
-            important_hits,
-    }
-
-
-# ============================================================
-# IMPORTANCE
-# ============================================================
-
-def importance_score(
-    article,
-    source_class
-):
-
-    title = title_text(article)
-
-    # Only headline + editorial summary for topic scoring.
-    # This prevents related-story/footer contamination.
-
-    text = summary_text(article)
-
-    score = 0
-    reasons = []
-
-    if source_class == "FULL":
-        score += 10
-        reasons.append("full-source")
-
-    elif source_class == "MEDIUM":
-        score += 7
-        reasons.append("medium-source")
-
-    else:
-        score += 4
-        reasons.append("short-source")
-
-    breaking = term_hits(
-        title,
-        BREAKING_TERMS
-    )
-
-    if breaking:
-        score += 15
-        reasons.append("breaking")
-
-    impact = term_hits(
-        text,
-        HIGH_IMPACT_TERMS
-    )
-
-    if impact:
-        score += min(
-            30,
-            12 + len(impact) * 4
-        )
-
-        reasons.append("high-impact")
-
-    government = term_hits(
-        text,
-        GOVERNMENT_TERMS
-    )
-
-    if government:
-        score += min(
-            20,
-            8 + len(government) * 2
-        )
-
-        reasons.append(
-            "government-public-interest"
-        )
-
-    business = term_hits(
-        text,
-        BUSINESS_TERMS
-    )
-
-    if business:
-        score += min(
-            18,
-            7 + len(business) * 2
-        )
-
-        reasons.append("major-business")
-
-    technology = term_hits(
-        text,
-        TECH_TERMS
-    )
-
-    if technology:
-        score += min(
-            18,
-            7 + len(technology) * 2
-        )
-
-        reasons.append("technology")
-
-    sports = term_hits(
-        text,
-        MAJOR_SPORTS_TERMS
-    )
-
-    if sports:
-        score += min(
-            22,
-            8 + len(sports) * 3
-        )
-
-        reasons.append("major-sports")
-
-    cricket = cricket_analysis(
+    return [
         article
-    )
-
-    if cricket["important_update"]:
-
-        score += 28
-
-        reasons.append(
-            "important-indian-cricket"
-        )
-
-    elif (
-        cricket["is_cricket"]
-        and cricket["india_related"]
-    ):
-
-        score += 8
-
-        reasons.append(
-            "india-cricket"
-        )
-
-    low = term_hits(
-        text,
-        LOW_VALUE_TERMS
-    )
-
-    if low:
-
-        score -= min(
-            35,
-            15 + len(low) * 5
-        )
-
-        reasons.append(
-            "low-value-penalty"
-        )
-
-    # Headline quality signal.
-
-    if len(title) >= 35:
-        score += 3
-
-    if len(title) >= 65:
-        score += 2
-
-    score = max(
-        0,
-        min(100, score)
-    )
-
-    return score, reasons, cricket
+        for article in queue
+        if article.get(
+            "production_selected"
+        ) is True
+    ]
 
 
 # ============================================================
-# SELECT
+# RECOVER INTERRUPTED PRODUCTION
 # ============================================================
 
-def select_story(queue):
+def find_recoverable_article(
+    queue: list[dict],
+):
 
     candidates = []
 
-    stats = {
-        "total": len(queue),
-        "processed": 0,
-        "short": 0,
-        "below_importance": 0,
-        "eligible": 0,
-    }
+    for position, article in enumerate(
+        queue
+    ):
 
-    for position, article in enumerate(queue):
+        if is_finished(
+            article
+        ):
+            continue
 
         title = clean_text(
-            article.get("title")
+            article.get(
+                "title"
+            )
         )
 
         if not title:
             continue
 
-        if already_processed(article):
+        status = clean_text(
+            article.get(
+                "status"
+            )
+        ).upper()
 
-            stats["processed"] += 1
-            continue
-
-        source_class, chars = (
-            classify_source(article)
+        progress = RECOVERY_PRIORITY.get(
+            status,
+            0,
         )
 
-        if source_class == "SKIP":
-
-            stats["short"] += 1
+        # Unknown states are not automatically recovered.
+        if progress <= 0:
             continue
 
-        score, reasons, cricket = (
-            importance_score(
-                article,
-                source_class
+        source_class, char_count = (
+            classify_source(
+                article
             )
         )
 
-        if score < MIN_IMPORTANCE_SCORE:
+        # A fresh article must have reasonable source text.
+        #
+        # Advanced articles may be recovered even when source
+        # metadata is old because they have already passed
+        # script/voice/media stages.
+        advanced = status in {
+            "SCRIPT_READY",
+            "VOICE_READY",
+            "SCENE_PLAN_READY",
+            "SCENES_READY",
+            "SCENE_FOOTAGE_READY",
+            "MULTI_MEDIA_READY",
+            "MULTI_VIDEO_READY",
+            "VIDEO_READY",
+            "RIGHTS_PASS",
+            "VOICE_FAILED",
+            "SCENE_FOOTAGE_FAILED",
+            "MULTI_VIDEO_FAILED",
+        }
 
-            stats[
-                "below_importance"
-            ] += 1
-
+        if (
+            source_class == "SKIP"
+            and not advanced
+        ):
             continue
 
-        stats["eligible"] += 1
+        source_priority = {
+            "FULL": 3,
+            "MEDIUM": 2,
+            "SHORT": 1,
+            "SKIP": 0,
+        }[source_class]
+
+        candidates.append(
+            {
+                "article": article,
+                "position": position,
+                "status": status,
+                "progress": progress,
+                "source_class": source_class,
+                "source_priority":
+                    source_priority,
+                "char_count": char_count,
+            }
+        )
+
+    if not candidates:
+        return None
+
+    # --------------------------------------------------------
+    # First priority:
+    # recover the most advanced interrupted production.
+    #
+    # Second:
+    # better source quality.
+    #
+    # Third:
+    # later queue position = newer appended record.
+    # --------------------------------------------------------
+
+    candidates.sort(
+        key=lambda item: (
+            item["progress"],
+            item["source_priority"],
+            item["position"],
+        ),
+        reverse=True,
+    )
+
+    return candidates[0]
+
+
+# ============================================================
+# FRESH ARTICLE SELECTION
+# ============================================================
+
+def find_fresh_article(
+    queue: list[dict],
+):
+
+    candidates = []
+
+    for position, article in enumerate(
+        queue
+    ):
+
+        if is_finished(
+            article
+        ):
+            continue
+
+        title = clean_text(
+            article.get(
+                "title"
+            )
+        )
+
+        if not title:
+            continue
+
+        status = clean_text(
+            article.get(
+                "status"
+            )
+        ).upper()
+
+        # Only fresh/retryable states should start from here.
+        if status not in {
+            "",
+            "ARTICLE_READY",
+            "READY_FOR_SCRIPT",
+            "SELECTED",
+            "PRODUCTION_SELECTED",
+            "HINDI_SCRIPT_FAILED",
+            "HINDI_SCRIPT_QUOTA_WAIT",
+        }:
+            continue
+
+        source_class, char_count = (
+            classify_source(
+                article
+            )
+        )
+
+        if source_class == "SKIP":
+            continue
 
         source_priority = {
             "FULL": 3,
@@ -811,41 +464,43 @@ def select_story(queue):
             "SHORT": 1,
         }[source_class]
 
-        candidates.append({
-            "position": position,
-            "article": article,
-            "source_class": source_class,
-            "chars": chars,
-            "score": score,
-            "reasons": reasons,
-            "cricket": cricket,
-            "source_priority":
-                source_priority,
-        })
+        candidates.append(
+            {
+                "article": article,
+                "position": position,
+                "status": status,
+                "source_class": source_class,
+                "source_priority":
+                    source_priority,
+                "char_count": char_count,
+            }
+        )
 
     if not candidates:
-        return None, stats
+        return None
 
+    # Best source quality first.
+    # Within same quality, newest appended record first.
     candidates.sort(
-        key=lambda x: (
-            x["score"],
-            x["source_priority"],
-            -x["position"],
+        key=lambda item: (
+            item["source_priority"],
+            item["position"],
         ),
-        reverse=True
+        reverse=True,
     )
 
-    return candidates[0], stats
+    return candidates[0]
 
 
 # ============================================================
-# VIDEO DURATION
+# DURATION SETTINGS
 # ============================================================
 
-def duration_settings(source_class):
+def duration_settings(
+    source_class: str,
+) -> dict:
 
     if source_class == "FULL":
-
         return {
             "video_duration_class":
                 "FULL",
@@ -858,7 +513,6 @@ def duration_settings(source_class):
         }
 
     if source_class == "MEDIUM":
-
         return {
             "video_duration_class":
                 "MEDIUM",
@@ -883,236 +537,446 @@ def duration_settings(source_class):
 
 
 # ============================================================
+# KEEP EXACTLY ONE SELECTION
+# ============================================================
+
+def enforce_single_selection(
+    queue: list[dict],
+    selected: dict,
+) -> int:
+
+    cleared = 0
+
+    for article in queue:
+
+        if article is selected:
+            continue
+
+        if article.get(
+            "production_selected"
+        ) is True:
+
+            article[
+                "production_selected"
+            ] = False
+
+            cleared += 1
+
+    selected[
+        "production_selected"
+    ] = True
+
+    return cleared
+
+
+# ============================================================
 # MAIN
 # ============================================================
 
-def main():
+def main() -> int:
 
     print()
     print("=" * 76)
-    print("THRAANSH PRODUCTION SELECTOR V4")
     print(
-        "IMPORTANT NEWS + STRICT INDIA CRICKET PRIORITY"
+        "THRAANSH PRODUCTION SELECTOR V3"
     )
     print("=" * 76)
+
     print()
+    print(
+        "Policy:"
+    )
+    print(
+        "Current incomplete production: KEEP"
+    )
+    print(
+        "Interrupted production: RECOVER"
+    )
+    print(
+        "Published content: NEVER REUSE"
+    )
+    print(
+        "Zero selected article: NEVER CONTINUE"
+    )
 
     queue = load_queue()
 
-    if not queue:
-        print("Article queue empty.")
-        return
-
+    print()
     print(
         "Articles in queue:",
         len(queue)
     )
 
-    cleared = clear_old_selections(
+    # ========================================================
+    # STEP 1
+    # Preserve a genuine current incomplete selection.
+    # ========================================================
+
+    current = current_selected_articles(
         queue
     )
 
-    print(
-        "Old selections cleared:",
-        cleared
-    )
+    selected_info = None
 
-    selection, stats = (
-        select_story(queue)
-    )
+    if current:
 
-    if not selection:
+        # More than one selection is invalid, but we can repair
+        # it by choosing the strongest incomplete one.
+        usable_current = [
+            article
+            for article in current
+            if not is_finished(
+                article
+            )
+        ]
 
-        save_queue(queue)
+        if usable_current:
+
+            current_candidates = []
+
+            for article in usable_current:
+
+                position = queue.index(
+                    article
+                )
+
+                source_class, char_count = (
+                    classify_source(
+                        article
+                    )
+                )
+
+                status = clean_text(
+                    article.get(
+                        "status"
+                    )
+                ).upper()
+
+                progress = RECOVERY_PRIORITY.get(
+                    status,
+                    1,
+                )
+
+                current_candidates.append(
+                    {
+                        "article": article,
+                        "position": position,
+                        "status": status,
+                        "progress": progress,
+                        "source_class":
+                            source_class,
+                        "char_count":
+                            char_count,
+                    }
+                )
+
+            current_candidates.sort(
+                key=lambda item: (
+                    item["progress"],
+                    item["position"],
+                ),
+                reverse=True,
+            )
+
+            selected_info = (
+                current_candidates[0]
+            )
+
+            print()
+            print(
+                "RECOVERING EXISTING SELECTION"
+            )
+
+    # ========================================================
+    # STEP 2
+    # If nothing selected, recover interrupted production.
+    # ========================================================
+
+    if selected_info is None:
+
+        recovery = find_recoverable_article(
+            queue
+        )
+
+        if recovery is not None:
+
+            selected_info = recovery
+
+            print()
+            print(
+                "RECOVERING INCOMPLETE PRODUCTION"
+            )
+
+    # ========================================================
+    # STEP 3
+    # If nothing to recover, choose fresh news.
+    # ========================================================
+
+    if selected_info is None:
+
+        fresh = find_fresh_article(
+            queue
+        )
+
+        if fresh is not None:
+
+            selected_info = fresh
+
+            print()
+            print(
+                "SELECTING FRESH STORY"
+            )
+
+    # ========================================================
+    # STEP 4
+    # Absolutely nothing available.
+    # STOP THE PIPELINE HERE.
+    # ========================================================
+
+    if selected_info is None:
+
+        print()
+        print("=" * 76)
+        print(
+            "NO USABLE STORY AVAILABLE"
+        )
+        print("=" * 76)
 
         print()
         print(
-            "NO IMPORTANT STORY AVAILABLE."
+            "No production_selected article "
+            "will be fabricated."
         )
 
         print(
-            "Weak news will not be uploaded."
+            "Pipeline must collect fresh news "
+            "before video production."
         )
 
-        return
+        return 20
 
-    article = selection["article"]
-    source_class = selection[
-        "source_class"
+    selected = selected_info[
+        "article"
     ]
 
-    score = selection["score"]
-    cricket = selection["cricket"]
+    position = selected_info[
+        "position"
+    ]
 
-    settings = duration_settings(
-        source_class
+    source_class = selected_info.get(
+        "source_class",
+        "SHORT",
     )
 
-    article[
-        "production_selected"
-    ] = True
+    char_count = selected_info.get(
+        "char_count",
+        len(
+            get_body(
+                selected
+            )
+        ),
+    )
 
-    article[
+    title = clean_text(
+        selected.get(
+            "title"
+        )
+    )
+
+    previous_status = clean_text(
+        selected.get(
+            "status"
+        )
+    ).upper()
+
+    # ========================================================
+    # IMPORTANT
+    #
+    # Only clear other selections AFTER we already have the
+    # replacement/current article in hand.
+    # ========================================================
+
+    cleared = enforce_single_selection(
+        queue,
+        selected,
+    )
+
+    # ========================================================
+    # Preserve advanced pipeline status.
+    #
+    # Do NOT reset VOICE_READY/VIDEO_READY/etc back to
+    # ARTICLE_READY.
+    # ========================================================
+
+    if previous_status in {
+        "",
+        "SELECTED",
+        "PRODUCTION_SELECTED",
+        "READY_FOR_SCRIPT",
+    }:
+        selected[
+            "status"
+        ] = "ARTICLE_READY"
+
+    selected[
         "production_scope"
     ] = "GLOBAL"
 
-    article[
-        "production_queue_position"
-    ] = selection["position"]
+    selected[
+        "story_region"
+    ] = selected.get(
+        "story_region"
+    ) or "UNCLASSIFIED"
 
-    article[
+    selected[
+        "production_queue_position"
+    ] = position
+
+    selected[
         "production_selected_at"
     ] = datetime.now().isoformat()
 
-    article[
-        "status"
-    ] = "ARTICLE_READY"
+    selected[
+        "source_quality_class"
+    ] = (
+        source_class
+        if source_class != "SKIP"
+        else selected.get(
+            "source_quality_class"
+        )
+        or "SHORT"
+    )
 
-    article[
+    selected[
+        "production_source_characters"
+    ] = char_count
+
+    selected[
         "last_error"
     ] = None
 
-    article[
+    selected[
         "updated_at"
     ] = datetime.now().isoformat()
 
-    article[
-        "source_quality_class"
-    ] = source_class
+    # Duration settings are only refreshed when the source
+    # classification is valid.
+    if source_class in {
+        "FULL",
+        "MEDIUM",
+        "SHORT",
+    }:
+        selected.update(
+            duration_settings(
+                source_class
+            )
+        )
 
-    article[
-        "production_source_characters"
-    ] = selection["chars"]
+    save_queue(
+        queue
+    )
 
-    article[
-        "importance_score"
-    ] = score
+    # ========================================================
+    # VERIFY AFTER SAVE
+    # ========================================================
 
-    article[
-        "importance_reasons"
-    ] = selection["reasons"]
+    verification_queue = load_queue()
 
-    article[
-        "is_cricket_story"
-    ] = cricket["is_cricket"]
-
-    article[
-        "is_india_cricket_story"
-    ] = cricket["india_related"]
-
-    article[
-        "important_cricket_update"
-    ] = cricket[
-        "important_update"
+    selected_after_save = [
+        article
+        for article in verification_queue
+        if article.get(
+            "production_selected"
+        ) is True
     ]
 
-    if cricket["important_update"]:
+    if len(
+        selected_after_save
+    ) != 1:
 
-        priority = (
-            "CRICKET_PRIORITY"
+        raise RuntimeError(
+            "CRITICAL: production selector "
+            "did not persist exactly one "
+            "production_selected article."
         )
 
-    elif score >= 75:
-
-        priority = (
-            "BREAKING_HIGH"
-        )
-
-    elif score >= 60:
-
-        priority = "HIGH"
-
-    else:
-
-        priority = "IMPORTANT"
-
-    article[
-        "production_priority"
-    ] = priority
-
-    article.update(settings)
-
-    save_queue(queue)
+    persisted = selected_after_save[0]
 
     print()
     print("=" * 76)
-    print("IMPORTANT STORY SELECTED")
+    print(
+        "THRAANSH PRODUCTION ARTICLE READY"
+    )
     print("=" * 76)
 
     print()
-    print("TITLE:")
     print(
-        article.get("title")
+        "TITLE:"
     )
-
-    print()
     print(
-        "Publisher:",
-        clean_text(
-            article.get("publisher")
-        )
-        or "Unknown"
-    )
-
-    print()
-    print(
-        "IMPORTANCE SCORE:",
-        score,
-        "/ 100"
-    )
-
-    print(
-        "REASONS:",
-        ", ".join(
-            selection["reasons"]
+        persisted.get(
+            "title"
         )
     )
 
     print()
     print(
-        "CRICKET:",
-        cricket["is_cricket"]
+        "STATUS:"
     )
-
     print(
-        "INDIA CRICKET:",
-        cricket["india_related"]
-    )
-
-    print(
-        "IMPORTANT CRICKET UPDATE:",
-        cricket["important_update"]
-    )
-
-    print()
-    print(
-        "PRODUCTION PRIORITY:",
-        priority
+        persisted.get(
+            "status"
+        )
     )
 
     print()
     print(
         "SOURCE QUALITY:",
-        source_class
+        persisted.get(
+            "source_quality_class"
+        )
     )
 
     print(
-        "VIDEO TARGET:",
-        settings[
-            "target_min_seconds"
-        ],
-        "-",
-        settings[
-            "target_max_seconds"
-        ],
-        "seconds"
+        "SOURCE CHARACTERS:",
+        persisted.get(
+            "production_source_characters"
+        )
     )
 
     print()
     print(
-        "status = ARTICLE_READY"
+        "Queue position:",
+        persisted.get(
+            "production_queue_position"
+        )
     )
+
+    print(
+        "Other old selections cleared:",
+        cleared
+    )
+
+    print()
+    print(
+        "production_selected count: 1"
+    )
+
+    print(
+        "production_selected = True"
+    )
+
+    print()
+    print(
+        "SELECTION PERSISTENCE CHECK: PASS"
+    )
+
+    print("=" * 76)
+
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(
+        main()
+    )
