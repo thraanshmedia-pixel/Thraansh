@@ -412,6 +412,18 @@ jobs:
       # PRODUCTION
       # ======================================================
 
+      - name: Repair ephemeral cloud runtime state
+        shell: bash
+        run: |
+          set -e
+
+          echo "=============================================="
+          echo "THRAANSH CLOUD RUNTIME STATE CHECK"
+          echo "=============================================="
+
+          python scripts/runtime_state_guard.py
+
+          echo "THRAANSH RUNTIME STATE CHECK: PASS"
       - name: Run THRAANSH production
         env:
 
