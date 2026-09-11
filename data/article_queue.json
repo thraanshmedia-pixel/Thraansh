@@ -4296,7 +4296,7 @@
     "retry_count": 0,
     "last_error": null,
     "created_at": "2026-08-26T11:00:08.479062",
-    "updated_at": "2026-09-11T14:26:38.885689",
+    "updated_at": "2026-09-11T14:28:30.348700",
     "script": "Welcome to THRAANSH.\n\nHere is today's latest update.\n\nHow Dolly Parton told her life story through six iconic songs\n\nThis story is currently being processed by the THRAANSH automation system.\n\nOur future AI script engine will create a complete news narration from this article.\n\nFor more updates, follow THRAANSH.\n\nSource:\nhttps://www.bbc.co.uk/news/articles/cpqpjv0j0eeo?at_medium=RSS&at_campaign=rss",
     "audio_file": null,
     "scene_plan": [
@@ -4391,14 +4391,14 @@
     "production_selected": true,
     "production_scope": "GLOBAL",
     "production_queue_position": 37,
-    "production_selected_at": "2026-09-11T14:26:38.885665",
+    "production_selected_at": "2026-09-11T14:28:30.348679",
     "source_quality_class": "SHORT",
     "production_source_characters": 0,
     "voice_file": null,
     "narration_file": null,
     "voice_generated_at": null,
     "voice_status": "PENDING",
-    "runtime_state_repaired_at": "2026-09-11T14:26:11.888458+05:30",
+    "runtime_state_repaired_at": "2026-09-11T14:27:56.422810+05:30",
     "runtime_state_previous_status": "SCRIPT_READY",
     "runtime_state_repair_reason": "Voice MP3 missing on this fresh runner. Regenerate Hindi voice."
   },
@@ -76536,7 +76536,7 @@
     "source_fetch_error": null,
     "long_form_source_ready": true,
     "category_slug": "news",
-    "time_text": "21m ago",
+    "time_text": "23m ago",
     "source_language": "en",
     "narration_language": "hi",
     "visual_language": "en",
@@ -76562,7 +76562,7 @@
     "status": "ARTICLE_READY",
     "retry_count": 0,
     "last_error": null,
-    "collected_at": "2026-09-11T08:56:24.869036+00:00"
+    "collected_at": "2026-09-11T08:58:07.964368+00:00"
   },
   {
     "id": null,
@@ -76580,7 +76580,7 @@
     "source_fetch_error": null,
     "long_form_source_ready": true,
     "category_slug": "news",
-    "time_text": "27m ago",
+    "time_text": "29m ago",
     "source_language": "en",
     "narration_language": "hi",
     "visual_language": "en",
@@ -76606,7 +76606,7 @@
     "status": "ARTICLE_READY",
     "retry_count": 0,
     "last_error": null,
-    "collected_at": "2026-09-11T08:56:33.038534+00:00"
+    "collected_at": "2026-09-11T08:58:24.498813+00:00"
   },
   {
     "id": null,
@@ -76624,7 +76624,7 @@
     "source_fetch_error": null,
     "long_form_source_ready": true,
     "category_slug": "news",
-    "time_text": "33m ago",
+    "time_text": "35m ago",
     "source_language": "en",
     "narration_language": "hi",
     "visual_language": "en",
@@ -76650,7 +76650,7 @@
     "status": "ARTICLE_READY",
     "retry_count": 0,
     "last_error": null,
-    "collected_at": "2026-09-11T08:56:35.728029+00:00"
+    "collected_at": "2026-09-11T08:58:27.044929+00:00"
   },
   {
     "id": null,
@@ -76668,7 +76668,7 @@
     "source_fetch_error": null,
     "long_form_source_ready": true,
     "category_slug": "news",
-    "time_text": "39m ago",
+    "time_text": "41m ago",
     "source_language": "en",
     "narration_language": "hi",
     "visual_language": "en",
@@ -76694,6 +76694,6 @@
     "status": "ARTICLE_READY",
     "retry_count": 0,
     "last_error": null,
-    "collected_at": "2026-09-11T08:56:38.385299+00:00"
+    "collected_at": "2026-09-11T08:58:29.839982+00:00"
   }
 ]
