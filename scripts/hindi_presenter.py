@@ -426,8 +426,16 @@ def main():
     print("Artificial padding: OFF")
     print()
 
-    if not GEMINI_API_KEY:
-        raise RuntimeError("GEMINI_API_KEY missing from .env")
+    if not GEMINI_API_KEY and not GROQ_API_KEY:
+        raise RuntimeError(
+            "Neither GEMINI_API_KEY nor GROQ_API_KEY is available."
+        )
+
+    if not GEMINI_API_KEY and GROQ_API_KEY:
+        print(
+            "[AI] Gemini unavailable. "
+            "Using Groq fallback directly."
+        )
 
     data = load_queue()
     article = get_next_article(data)
@@ -483,7 +491,13 @@ def main():
             )
 
     try:
-        client = genai.Client(api_key=GEMINI_API_KEY)
+        client = (
+            genai.Client(
+                api_key=GEMINI_API_KEY
+            )
+            if GEMINI_API_KEY
+            else None
+        )
         print("PASS 1/1: Generating final factual Hindi narration...")
         narration = generate_script_one_call(client, article)
         initial_count = word_count(narration)
@@ -542,4 +556,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 

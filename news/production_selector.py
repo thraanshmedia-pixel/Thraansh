@@ -351,10 +351,38 @@ def find_recoverable_article(
             "MULTI_VIDEO_FAILED",
         }
 
-        if (
-            source_class == "SKIP"
-            and not advanced
-        ):
+        if source_class == "SKIP":
+
+            # Never recover an unusable-source record.
+            #
+            # An advanced status by itself is not proof that the
+            # required source/script/media still exists on a fresh
+            # GitHub Actions runner.
+
+            article[
+                "production_selected"
+            ] = False
+
+            article[
+                "status"
+            ] = "SOURCE_UNUSABLE"
+
+            article[
+                "production_source_characters"
+            ] = char_count
+
+            article[
+                "last_error"
+            ] = (
+                "Interrupted production rejected because "
+                "usable source text is below "
+                f"{SHORT_MIN_CHARS} characters."
+            )
+
+            article[
+                "updated_at"
+            ] = datetime.now().isoformat()
+
             continue
 
         source_priority = {
@@ -656,6 +684,59 @@ def main() -> int:
                     status,
                     1,
                 )
+
+                # ------------------------------------------------
+                # PERMANENT ZERO-SOURCE GUARD
+                #
+                # A previously selected record must never be
+                # recovered merely because it has an advanced
+                # status. Cloud runners are ephemeral and stale
+                # queue metadata can claim SCRIPT_READY even when
+                # the actual source/script/media is unavailable.
+                # ------------------------------------------------
+
+                if source_class == "SKIP":
+
+                    article[
+                        "production_selected"
+                    ] = False
+
+                    article[
+                        "status"
+                    ] = "SOURCE_UNUSABLE"
+
+                    article[
+                        "production_source_characters"
+                    ] = char_count
+
+                    article[
+                        "last_error"
+                    ] = (
+                        "Production selector rejected stale "
+                        "selection because usable source text "
+                        f"is below {SHORT_MIN_CHARS} characters."
+                    )
+
+                    article[
+                        "updated_at"
+                    ] = datetime.now().isoformat()
+
+                    print()
+                    print(
+                        "REJECTING STALE ZERO/SHORT-SOURCE "
+                        "SELECTION:"
+                    )
+                    print(
+                        clean_text(
+                            article.get("title")
+                        )
+                    )
+                    print(
+                        "Usable source characters:",
+                        char_count,
+                    )
+
+                    continue
 
                 current_candidates.append(
                     {
@@ -980,3 +1061,4 @@ if __name__ == "__main__":
     raise SystemExit(
         main()
     )
+
