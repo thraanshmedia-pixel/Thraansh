@@ -1,4 +1,4 @@
-import asyncio
+﻿import asyncio
 import json
 import re
 from datetime import datetime
@@ -354,7 +354,7 @@ def main():
     )
 
     print(
-        "INDIA + INTERNATIONAL âœ“"
+        "INDIA + INTERNATIONAL Ã¢Å“â€œ"
     )
 
     print()
@@ -364,11 +364,11 @@ def main():
     )
 
     print(
-        "Language: Easy Hindi âœ“"
+        "Language: Easy Hindi Ã¢Å“â€œ"
     )
 
     print(
-        "Country restriction: NONE âœ“"
+        "Country restriction: NONE Ã¢Å“â€œ"
     )
 
     # ========================================================
@@ -390,7 +390,7 @@ def main():
             error
         )
 
-        return
+        raise
 
     # ========================================================
     # FIND ARTICLE
@@ -408,7 +408,10 @@ def main():
             "article is waiting for voice."
         )
 
-        return
+        raise RuntimeError(
+            "No selected SCRIPT_READY article is waiting for voice. "
+            "Narration was not generated, so the pipeline must stop."
+        )
 
     # ========================================================
     # ARTICLE DATA
@@ -592,19 +595,19 @@ def main():
 
         print()
         print(
-            "Easy Hindi âœ“"
+            "Easy Hindi Ã¢Å“â€œ"
         )
 
         print(
-            "India news supported âœ“"
+            "India news supported Ã¢Å“â€œ"
         )
 
         print(
-            "International news supported âœ“"
+            "International news supported Ã¢Å“â€œ"
         )
 
         print(
-            "Original story country preserved âœ“"
+            "Original story country preserved Ã¢Å“â€œ"
         )
 
         print()
