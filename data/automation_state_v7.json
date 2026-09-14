@@ -1,14 +1,14 @@
 {
-  "prepared_slot": "2026-09-14T17:12",
-  "prepare_status": "READY",
+  "prepared_slot": "2026-09-14T19:12",
+  "prepare_status": "FAILED",
   "prepared_title": "Rahul Gandhi demands FIR under SC/ST act over 'purification' ritual at Mallikarjun Kharge's rally venue in Haldwani",
   "prepared_video": "/home/runner/work/Thraansh/Thraansh/final_videos/Rahul_Gandhi_demands_FIR_under_SC_ST_act_over_'purification'_ritual_at_Mallikarjun_Kharge'_THRAANSH_FINAL.mp4",
   "prepared_at_ist": "2026-09-14T17:14:49.231585+05:30",
-  "updated_at_ist": "2026-09-14T17:16:48.407740+05:30",
+  "updated_at_ist": "2026-09-14T19:13:36.988900+05:30",
   "completion_status": "PARTIAL_RETRY_PENDING",
   "active_slot": "2026-09-14T17:12",
   "completed_slot": "2026-09-06T07:06",
   "completed_at_ist": "2026-09-06T07:09:01.053416+05:30",
-  "failed_stage": "",
+  "failed_stage": "HINDI SCRIPT",
   "gemini_retry_not_before": "2026-09-02T12:35:00+05:30"
 }
