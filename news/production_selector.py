@@ -759,14 +759,23 @@ def main() -> int:
                 reverse=True,
             )
 
-            selected_info = (
-                current_candidates[0]
-            )
+            if current_candidates:
+                selected_info = (
+                    current_candidates[0]
+                )
 
-            print()
-            print(
-                "RECOVERING EXISTING SELECTION"
-            )
+                print()
+                print(
+                    "RECOVERING EXISTING SELECTION"
+                )
+            else:
+                selected_info = None
+
+                print()
+                print(
+                    "NO USABLE EXISTING SELECTION; "
+                    "CONTINUING TO RECOVERY/FRESH NEWS"
+                )
 
     # ========================================================
     # STEP 2
