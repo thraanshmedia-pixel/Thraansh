@@ -1,14 +1,14 @@
 {
-  "prepared_slot": "2026-09-15T09:12",
-  "prepare_status": "READY",
+  "prepared_slot": "2026-09-15T11:11",
+  "prepare_status": "FAILED",
   "prepared_title": "Faridabad student death: Haryana human rights panel seeks school safety report",
   "prepared_video": "/home/runner/work/Thraansh/Thraansh/final_videos/Faridabad_student_death__Haryana_human_rights_panel_seeks_school_safety_report_THRAANSH_FINAL.mp4",
   "prepared_at_ist": "2026-09-15T09:17:03.574160+05:30",
-  "updated_at_ist": "2026-09-15T09:20:41.241076+05:30",
+  "updated_at_ist": "2026-09-15T11:13:54.992919+05:30",
   "completion_status": "PARTIAL_RETRY_PENDING",
   "active_slot": "2026-09-15T09:12",
   "completed_slot": "2026-09-06T07:06",
   "completed_at_ist": "2026-09-06T07:09:01.053416+05:30",
-  "failed_stage": "",
+  "failed_stage": "FINAL VIDEO",
   "gemini_retry_not_before": "2026-09-02T12:35:00+05:30"
 }
