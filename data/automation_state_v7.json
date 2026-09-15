@@ -1,14 +1,14 @@
 {
-  "prepared_slot": "2026-09-15T19:11",
-  "prepare_status": "FAILED",
-  "prepared_title": "'India Could Become Cash Economy Again': Ashneer Grover Slams Possible Charges On UPI Transactions Above ₹2,000",
-  "prepared_video": "/home/runner/work/Thraansh/Thraansh/final_videos/'India_Could_Become_Cash_Economy_Again'__Ashneer_Grover_Slams_Possible_Charges_On_UPI_Tran_THRAANSH_FINAL.mp4",
-  "prepared_at_ist": "2026-09-15T17:12:13.198720+05:30",
-  "updated_at_ist": "2026-09-15T19:13:44.401245+05:30",
+  "prepared_slot": "2026-09-15T21:11",
+  "prepare_status": "READY",
+  "prepared_title": "SP emphasises robust security arrangements at Ganesh immersion sites in Prakasam",
+  "prepared_video": "/home/runner/work/Thraansh/Thraansh/final_videos/SP_emphasises_robust_security_arrangements_at_Ganesh_immersion_sites_in_Prakasam_THRAANSH_FINAL.mp4",
+  "prepared_at_ist": "2026-09-15T21:12:59.132624+05:30",
+  "updated_at_ist": "2026-09-15T21:14:23.205512+05:30",
   "completion_status": "PARTIAL_RETRY_PENDING",
-  "active_slot": "2026-09-15T17:10",
+  "active_slot": "2026-09-15T21:11",
   "completed_slot": "2026-09-06T07:06",
   "completed_at_ist": "2026-09-06T07:09:01.053416+05:30",
-  "failed_stage": "FINAL VIDEO",
+  "failed_stage": "",
   "gemini_retry_not_before": "2026-09-02T12:35:00+05:30"
 }
