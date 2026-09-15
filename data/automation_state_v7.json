@@ -1,14 +1,14 @@
 {
-  "prepared_slot": "2026-09-14T21:12",
-  "prepare_status": "FAILED",
-  "prepared_title": "Rahul Gandhi demands FIR under SC/ST act over 'purification' ritual at Mallikarjun Kharge's rally venue in Haldwani",
-  "prepared_video": "/home/runner/work/Thraansh/Thraansh/final_videos/Rahul_Gandhi_demands_FIR_under_SC_ST_act_over_'purification'_ritual_at_Mallikarjun_Kharge'_THRAANSH_FINAL.mp4",
-  "prepared_at_ist": "2026-09-14T17:14:49.231585+05:30",
-  "updated_at_ist": "2026-09-14T21:15:20.181964+05:30",
+  "prepared_slot": "2026-09-15T07:11",
+  "prepare_status": "READY",
+  "prepared_title": "Chai, hugs, handshakes: Unseen clips of PM Modi interacting with world leaders at BRICS Summit",
+  "prepared_video": "/home/runner/work/Thraansh/Thraansh/final_videos/Chai,_hugs,_handshakes__Unseen_clips_of_PM_Modi_interacting_with_world_leaders_at_BRICS_Su_THRAANSH_FINAL.mp4",
+  "prepared_at_ist": "2026-09-15T07:13:40.485651+05:30",
+  "updated_at_ist": "2026-09-15T07:16:47.338046+05:30",
   "completion_status": "PARTIAL_RETRY_PENDING",
-  "active_slot": "2026-09-14T17:12",
+  "active_slot": "2026-09-15T07:11",
   "completed_slot": "2026-09-06T07:06",
   "completed_at_ist": "2026-09-06T07:09:01.053416+05:30",
-  "failed_stage": "FINAL VIDEO",
+  "failed_stage": "",
   "gemini_retry_not_before": "2026-09-02T12:35:00+05:30"
 }
