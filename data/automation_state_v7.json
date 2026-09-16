@@ -1,14 +1,14 @@
 {
-  "prepared_slot": "2026-09-16T11:10",
-  "prepare_status": "FAILED",
-  "prepared_title": "Flies, Rodent Droppings, Expired Ingredients Found During Food Safety Checks At Major Chains In Indore",
-  "prepared_video": "/home/runner/work/Thraansh/Thraansh/final_videos/Flies,_Rodent_Droppings,_Expired_Ingredients_Found_During_Food_Safety_Checks_At_Major_Chai_THRAANSH_FINAL.mp4",
-  "prepared_at_ist": "2026-09-16T09:13:17.486064+05:30",
-  "updated_at_ist": "2026-09-16T11:13:01.256759+05:30",
+  "prepared_slot": "2026-09-16T13:11",
+  "prepare_status": "READY",
+  "prepared_title": "Militants burn down two houses in Manipur village, exchange fire with security forces",
+  "prepared_video": "/home/runner/work/Thraansh/Thraansh/final_videos/Militants_burn_down_two_houses_in_Manipur_village,_exchange_fire_with_security_forces_THRAANSH_FINAL.mp4",
+  "prepared_at_ist": "2026-09-16T13:12:32.885332+05:30",
+  "updated_at_ist": "2026-09-16T13:14:00.562985+05:30",
   "completion_status": "PARTIAL_RETRY_PENDING",
-  "active_slot": "2026-09-16T09:11",
+  "active_slot": "2026-09-16T13:11",
   "completed_slot": "2026-09-06T07:06",
   "completed_at_ist": "2026-09-06T07:09:01.053416+05:30",
-  "failed_stage": "FINAL VIDEO",
+  "failed_stage": "",
   "gemini_retry_not_before": "2026-09-02T12:35:00+05:30"
 }
