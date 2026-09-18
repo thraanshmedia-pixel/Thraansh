@@ -1,14 +1,14 @@
 {
-  "prepared_slot": "2026-09-17T21:10",
-  "prepare_status": "FAILED",
-  "prepared_title": "Kerala State Women’s Commission raises concerns on safety of elderly women",
-  "prepared_video": "/home/runner/work/Thraansh/Thraansh/final_videos/Kerala_State_Women’s_Commission_raises_concerns_on_safety_of_elderly_women_THRAANSH_FINAL.mp4",
-  "prepared_at_ist": "2026-09-17T17:11:34.399058+05:30",
-  "updated_at_ist": "2026-09-17T21:12:10.696164+05:30",
+  "prepared_slot": "2026-09-18T07:08",
+  "prepare_status": "READY",
+  "prepared_title": "From PNS Babur to PNS Hunain: A dangerous 15-year pattern of close-quarters naval encounters",
+  "prepared_video": "/home/runner/work/Thraansh/Thraansh/final_videos/From_PNS_Babur_to_PNS_Hunain__A_dangerous_15-year_pattern_of_close-quarters_naval_encounte_THRAANSH_FINAL.mp4",
+  "prepared_at_ist": "2026-09-18T07:10:36.810296+05:30",
+  "updated_at_ist": "2026-09-18T07:13:20.376953+05:30",
   "completion_status": "PARTIAL_RETRY_PENDING",
-  "active_slot": "2026-09-17T17:09",
+  "active_slot": "2026-09-18T07:08",
   "completed_slot": "2026-09-06T07:06",
   "completed_at_ist": "2026-09-06T07:09:01.053416+05:30",
-  "failed_stage": "FINAL VIDEO",
+  "failed_stage": "",
   "gemini_retry_not_before": "2026-09-02T12:35:00+05:30"
 }
