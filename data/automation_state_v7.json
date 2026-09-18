@@ -1,14 +1,14 @@
 {
-  "prepared_slot": "2026-09-18T19:10",
-  "prepare_status": "FAILED",
-  "prepared_title": "Tamil Nadu govt. firm on two-language policy, not to provide land for Navodaya schools: Minister Rajmohan",
-  "prepared_video": "/home/runner/work/Thraansh/Thraansh/final_videos/Tamil_Nadu_govt._firm_on_two-language_policy,_not_to_provide_land_for_Navodaya_schools__Mi_THRAANSH_FINAL.mp4",
-  "prepared_at_ist": "2026-09-18T17:10:56.536160+05:30",
-  "updated_at_ist": "2026-09-18T19:12:32.454500+05:30",
+  "prepared_slot": "2026-09-18T21:10",
+  "prepare_status": "READY",
+  "prepared_title": "Kerala Tourism showcases unique offerings at Arabian Travel Market 2026",
+  "prepared_video": "/home/runner/work/Thraansh/Thraansh/final_videos/Kerala_Tourism_showcases_unique_offerings_at_Arabian_Travel_Market_2026_THRAANSH_FINAL.mp4",
+  "prepared_at_ist": "2026-09-18T21:11:43.834179+05:30",
+  "updated_at_ist": "2026-09-18T21:13:10.751625+05:30",
   "completion_status": "PARTIAL_RETRY_PENDING",
-  "active_slot": "2026-09-18T17:09",
+  "active_slot": "2026-09-18T21:10",
   "completed_slot": "2026-09-06T07:06",
   "completed_at_ist": "2026-09-06T07:09:01.053416+05:30",
-  "failed_stage": "FINAL VIDEO",
+  "failed_stage": "",
   "gemini_retry_not_before": "2026-09-02T12:35:00+05:30"
 }
