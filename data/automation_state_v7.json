@@ -1,14 +1,14 @@
 {
-  "prepared_slot": "2026-09-22T23:12",
-  "prepare_status": "FAILED",
-  "prepared_title": "CPI(M) demands ₹1 lakh crore special drought relief package for farmers in Andhra Pradesh",
-  "prepared_video": "/home/runner/work/Thraansh/Thraansh/final_videos/CPI(M)_demands_₹1_lakh_crore_special_drought_relief_package_for_farmers_in_Andhra_Pradesh_THRAANSH_FINAL.mp4",
-  "prepared_at_ist": "2026-09-21T07:11:00.906895+05:30",
-  "updated_at_ist": "2026-09-22T23:15:22.200404+05:30",
+  "prepared_slot": "2026-09-23T11:49",
+  "prepare_status": "READY",
+  "prepared_title": "Actor-producer Unni Mukundan joins hands with Panaroma Studios for his 50th film",
+  "prepared_video": "/home/runner/work/Thraansh/Thraansh/final_videos/Actor-producer_Unni_Mukundan_joins_hands_with_Panaroma_Studios_for_his_50th_film_THRAANSH_FINAL.mp4",
+  "prepared_at_ist": "2026-09-23T11:50:47.149893+05:30",
+  "updated_at_ist": "2026-09-23T11:53:00.497221+05:30",
   "completion_status": "PARTIAL_RETRY_PENDING",
-  "active_slot": "2026-09-21T07:10",
+  "active_slot": "2026-09-23T11:49",
   "completed_slot": "2026-09-06T07:06",
   "completed_at_ist": "2026-09-06T07:09:01.053416+05:30",
-  "failed_stage": "FINAL VIDEO",
+  "failed_stage": "",
   "gemini_retry_not_before": "2026-09-02T12:35:00+05:30"
 }
