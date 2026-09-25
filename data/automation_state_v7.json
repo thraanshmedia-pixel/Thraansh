@@ -1,14 +1,14 @@
 {
-  "prepared_slot": "2026-09-24T23:25",
-  "prepare_status": "FAILED",
-  "prepared_title": "Dolly Parton's manager accuses her nephew of threats and intimidation",
-  "prepared_video": "/home/runner/work/Thraansh/Thraansh/final_videos/Dolly_Parton's_manager_accuses_her_nephew_of_threats_and_intimidation_THRAANSH_FINAL.mp4",
-  "prepared_at_ist": "2026-09-24T12:01:06.407891+05:30",
-  "updated_at_ist": "2026-09-24T23:27:53.807240+05:30",
+  "prepared_slot": "2026-09-25T11:53",
+  "prepare_status": "READY",
+  "prepared_title": "Seven years after MV Act amendments, experts seek safer roads, stricter speed management",
+  "prepared_video": "/home/runner/work/Thraansh/Thraansh/final_videos/Seven_years_after_MV_Act_amendments,_experts_seek_safer_roads,_stricter_speed_management_THRAANSH_FINAL.mp4",
+  "prepared_at_ist": "2026-09-25T11:55:15.394698+05:30",
+  "updated_at_ist": "2026-09-25T11:57:43.659916+05:30",
   "completion_status": "PARTIAL_RETRY_PENDING",
-  "active_slot": "2026-09-24T11:58",
+  "active_slot": "2026-09-25T11:53",
   "completed_slot": "2026-09-06T07:06",
   "completed_at_ist": "2026-09-06T07:09:01.053416+05:30",
-  "failed_stage": "FINAL VIDEO",
+  "failed_stage": "",
   "gemini_retry_not_before": "2026-09-02T12:35:00+05:30"
 }
