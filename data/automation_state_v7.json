@@ -1,14 +1,14 @@
 {
-  "prepared_slot": "2026-09-25T23:32",
-  "prepare_status": "FAILED",
-  "prepared_title": "Seven years after MV Act amendments, experts seek safer roads, stricter speed management",
-  "prepared_video": "/home/runner/work/Thraansh/Thraansh/final_videos/Seven_years_after_MV_Act_amendments,_experts_seek_safer_roads,_stricter_speed_management_THRAANSH_FINAL.mp4",
-  "prepared_at_ist": "2026-09-25T11:55:15.394698+05:30",
-  "updated_at_ist": "2026-09-25T23:34:45.109340+05:30",
+  "prepared_slot": "2026-09-26T11:53",
+  "prepare_status": "READY",
+  "prepared_title": "Rashmika Mandanna Goes All-In On Colour-Blocked Fashion In Playful Onitsuka Tiger Look At Milan Fashion Week",
+  "prepared_video": "/home/runner/work/Thraansh/Thraansh/final_videos/Rashmika_Mandanna_Goes_All-In_On_Colour-Blocked_Fashion_In_Playful_Onitsuka_Tiger_Look_At__THRAANSH_FINAL.mp4",
+  "prepared_at_ist": "2026-09-26T11:55:48.708626+05:30",
+  "updated_at_ist": "2026-09-26T11:58:33.963582+05:30",
   "completion_status": "PARTIAL_RETRY_PENDING",
-  "active_slot": "2026-09-25T11:53",
+  "active_slot": "2026-09-26T11:53",
   "completed_slot": "2026-09-06T07:06",
   "completed_at_ist": "2026-09-06T07:09:01.053416+05:30",
-  "failed_stage": "FINAL VIDEO",
+  "failed_stage": "",
   "gemini_retry_not_before": "2026-09-02T12:35:00+05:30"
 }
