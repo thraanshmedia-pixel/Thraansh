@@ -1,14 +1,14 @@
 {
-  "prepared_slot": "2026-09-27T23:24",
-  "prepare_status": "READY",
+  "prepared_slot": "2026-09-28T12:48",
+  "prepare_status": "FAILED",
   "prepared_title": "‘Hooliganism won’t be tolerated; what is his crime?': Rahul Gandhi, AAP rage over Parvesh Verma's slapgate",
   "prepared_video": "/home/runner/work/Thraansh/Thraansh/final_videos/‘Hooliganism_won’t_be_tolerated;_what_is_his_crime_'__Rahul_Gandhi,_AAP_rage_over_Parvesh__THRAANSH_FINAL.mp4",
   "prepared_at_ist": "2026-09-27T23:27:03.500954+05:30",
-  "updated_at_ist": "2026-09-27T23:30:08.456720+05:30",
+  "updated_at_ist": "2026-09-28T12:51:16.400268+05:30",
   "completion_status": "PARTIAL_RETRY_PENDING",
   "active_slot": "2026-09-27T23:24",
   "completed_slot": "2026-09-06T07:06",
   "completed_at_ist": "2026-09-06T07:09:01.053416+05:30",
-  "failed_stage": "",
+  "failed_stage": "FINAL VIDEO",
   "gemini_retry_not_before": "2026-09-02T12:35:00+05:30"
 }
