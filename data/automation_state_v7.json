@@ -1,14 +1,14 @@
 {
-  "prepared_slot": "2026-09-28T21:16",
-  "prepare_status": "FAILED",
-  "prepared_title": "‘Hooliganism won’t be tolerated; what is his crime?': Rahul Gandhi, AAP rage over Parvesh Verma's slapgate",
-  "prepared_video": "/home/runner/work/Thraansh/Thraansh/final_videos/‘Hooliganism_won’t_be_tolerated;_what_is_his_crime_'__Rahul_Gandhi,_AAP_rage_over_Parvesh__THRAANSH_FINAL.mp4",
-  "prepared_at_ist": "2026-09-27T23:27:03.500954+05:30",
-  "updated_at_ist": "2026-09-28T21:18:39.031155+05:30",
+  "prepared_slot": "2026-09-29T12:45",
+  "prepare_status": "READY",
+  "prepared_title": "Madras High Court refuses to review its order on micro/nano plastics warning labels on bottled water, sugar, and salt",
+  "prepared_video": "/home/runner/work/Thraansh/Thraansh/final_videos/Madras_High_Court_refuses_to_review_its_order_on_micro_nano_plastics_warning_labels_on_bot_THRAANSH_FINAL.mp4",
+  "prepared_at_ist": "2026-09-29T12:47:08.024710+05:30",
+  "updated_at_ist": "2026-09-29T12:48:33.609871+05:30",
   "completion_status": "PARTIAL_RETRY_PENDING",
-  "active_slot": "2026-09-27T23:24",
+  "active_slot": "2026-09-29T12:45",
   "completed_slot": "2026-09-06T07:06",
   "completed_at_ist": "2026-09-06T07:09:01.053416+05:30",
-  "failed_stage": "FINAL VIDEO",
+  "failed_stage": "",
   "gemini_retry_not_before": "2026-09-02T12:35:00+05:30"
 }
