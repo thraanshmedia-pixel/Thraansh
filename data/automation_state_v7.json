@@ -1,14 +1,14 @@
 {
-  "prepared_slot": "2026-10-01T01:43",
-  "prepare_status": "FAILED",
-  "prepared_title": "Keralam local body bypolls: UDF retains Ayyappankkavu in Kochi Corporation",
-  "prepared_video": "/home/runner/work/Thraansh/Thraansh/final_videos/Keralam_local_body_bypolls__UDF_retains_Ayyappankkavu_in_Kochi_Corporation_THRAANSH_FINAL.mp4",
-  "prepared_at_ist": "2026-09-30T19:38:02.917890+05:30",
-  "updated_at_ist": "2026-10-01T01:45:39.048420+05:30",
+  "prepared_slot": "2026-10-01T13:00",
+  "prepare_status": "READY",
+  "prepared_title": "Satara: Two Transgender Persons Stripped, Assaulted Over Worship Of Varaha Deity; Case Registered |WATCH VIDEO",
+  "prepared_video": "/home/runner/work/Thraansh/Thraansh/final_videos/Satara__Two_Transgender_Persons_Stripped,_Assaulted_Over_Worship_Of_Varaha_Deity;_Case_Reg_THRAANSH_FINAL.mp4",
+  "prepared_at_ist": "2026-10-01T13:02:03.579234+05:30",
+  "updated_at_ist": "2026-10-01T13:05:02.327885+05:30",
   "completion_status": "PARTIAL_RETRY_PENDING",
-  "active_slot": "2026-09-30T19:36",
+  "active_slot": "2026-10-01T13:00",
   "completed_slot": "2026-09-06T07:06",
   "completed_at_ist": "2026-09-06T07:09:01.053416+05:30",
-  "failed_stage": "FINAL VIDEO",
+  "failed_stage": "",
   "gemini_retry_not_before": "2026-09-02T12:35:00+05:30"
 }
