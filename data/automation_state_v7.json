@@ -1,14 +1,14 @@
 {
-  "prepared_slot": "2026-10-02T19:31",
-  "prepare_status": "READY",
+  "prepared_slot": "2026-10-03T01:35",
+  "prepare_status": "FAILED",
   "prepared_title": "Clashes erupt in Patna during protest seeking resignation of CEC Gyanesh Kumar",
   "prepared_video": "/home/runner/work/Thraansh/Thraansh/final_videos/Clashes_erupt_in_Patna_during_protest_seeking_resignation_of_CEC_Gyanesh_Kumar_THRAANSH_FINAL.mp4",
   "prepared_at_ist": "2026-10-02T19:32:41.433084+05:30",
-  "updated_at_ist": "2026-10-02T19:34:30.007263+05:30",
+  "updated_at_ist": "2026-10-03T01:37:03.723377+05:30",
   "completion_status": "PARTIAL_RETRY_PENDING",
   "active_slot": "2026-10-02T19:31",
   "completed_slot": "2026-09-06T07:06",
   "completed_at_ist": "2026-09-06T07:09:01.053416+05:30",
-  "failed_stage": "",
+  "failed_stage": "FINAL VIDEO",
   "gemini_retry_not_before": "2026-09-02T12:35:00+05:30"
 }
