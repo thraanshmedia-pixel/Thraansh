@@ -1,14 +1,14 @@
 {
-  "prepared_slot": "2026-10-07T20:13",
-  "prepare_status": "FAILED",
-  "prepared_title": "RBI May Limit Rate Hikes To 25–50 Basis Points, Report Sees Inflation Cooling In 2027",
-  "prepared_video": "/home/runner/work/Thraansh/Thraansh/final_videos/RBI_May_Limit_Rate_Hikes_To_25–50_Basis_Points,_Report_Sees_Inflation_Cooling_In_2027_THRAANSH_FINAL.mp4",
-  "prepared_at_ist": "2026-10-06T21:39:20.221683+05:30",
-  "updated_at_ist": "2026-10-07T20:15:26.255190+05:30",
+  "prepared_slot": "2026-10-08T02:13",
+  "prepare_status": "READY",
+  "prepared_title": "‘Is history repeating itself?’: Supreme Court invokes Nirbhaya case after string of rape cases in Delhi-NCR",
+  "prepared_video": "/home/runner/work/Thraansh/Thraansh/final_videos/‘Is_history_repeating_itself_’__Supreme_Court_invokes_Nirbhaya_case_after_string_of_rape_c_THRAANSH_FINAL.mp4",
+  "prepared_at_ist": "2026-10-08T02:14:19.022307+05:30",
+  "updated_at_ist": "2026-10-08T02:17:07.545232+05:30",
   "completion_status": "PARTIAL_RETRY_PENDING",
-  "active_slot": "2026-10-06T21:37",
+  "active_slot": "2026-10-08T02:13",
   "completed_slot": "2026-09-06T07:06",
   "completed_at_ist": "2026-09-06T07:09:01.053416+05:30",
-  "failed_stage": "FINAL VIDEO",
+  "failed_stage": "",
   "gemini_retry_not_before": "2026-09-02T12:35:00+05:30"
 }
