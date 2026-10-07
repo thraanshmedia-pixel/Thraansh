@@ -1,14 +1,14 @@
 {
-  "prepared_slot": "2026-10-06T21:37",
-  "prepare_status": "READY",
+  "prepared_slot": "2026-10-07T13:01",
+  "prepare_status": "FAILED",
   "prepared_title": "RBI May Limit Rate Hikes To 25–50 Basis Points, Report Sees Inflation Cooling In 2027",
   "prepared_video": "/home/runner/work/Thraansh/Thraansh/final_videos/RBI_May_Limit_Rate_Hikes_To_25–50_Basis_Points,_Report_Sees_Inflation_Cooling_In_2027_THRAANSH_FINAL.mp4",
   "prepared_at_ist": "2026-10-06T21:39:20.221683+05:30",
-  "updated_at_ist": "2026-10-06T21:42:19.558481+05:30",
+  "updated_at_ist": "2026-10-07T13:01:57.532481+05:30",
   "completion_status": "PARTIAL_RETRY_PENDING",
   "active_slot": "2026-10-06T21:37",
   "completed_slot": "2026-09-06T07:06",
   "completed_at_ist": "2026-09-06T07:09:01.053416+05:30",
-  "failed_stage": "",
+  "failed_stage": "HINDI SCRIPT",
   "gemini_retry_not_before": "2026-09-02T12:35:00+05:30"
 }
